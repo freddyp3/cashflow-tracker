@@ -1,0 +1,1 @@
+DROP VIEW IF EXISTS grailed_view_units_sold; -- needed if table columns changed
