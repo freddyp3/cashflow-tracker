@@ -23,8 +23,8 @@ CREATE TABLE orders (
 
 CREATE TABLE order_items (
     order_item_id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
-    order_id int REFERENCES orders(order_id) NOT NULL ON DELETE CASCADE, -- deletes all children if order_id (parent) is deleted
-    product_id int REFERENCES products(product_id) NOT NULL ,
+    order_id int NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE, -- deletes all children if order_id (parent) is deleted
+    product_id int NOT NULL REFERENCES products(product_id),
     item_paid NUMERIC(10, 2) DEFAULT 0,
     item_size varchar(200),
     note TEXT
