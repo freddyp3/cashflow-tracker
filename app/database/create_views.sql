@@ -1,1 +1,68 @@
-DROP VIEW IF EXISTS grailed_view_units_sold; -- needed if table columns changed
+DROP VIEW IF EXISTS platform_product_sales;
+
+CREATE OR REPLACE VIEW platform_product_sales AS
+SELECT p.product_id, 
+       p.product_name, 
+       -- GRAILED stats
+       COUNT(oi.order_item_id) FILTER (WHERE o.platform = 'GRAILED') AS grailed_sales,
+       -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'GRAILED')) AS grailed_product_cost,
+       -(SUM(o.shipping) FILTER (WHERE o.platform = 'GRAILED')) AS grailed_shipping_cost,
+       SUM(o.revenue) FILTER (WHERE o.platform = 'GRAILED') AS grailed_revenue,
+       (SUM(o.revenue) FILTER (WHERE o.platform = 'GRAILED') 
+       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'GRAILED')) 
+       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'GRAILED'))) AS grailed_profit,
+       ROUND(((SUM(o.revenue) FILTER (WHERE o.platform = 'GRAILED') 
+       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'GRAILED')) 
+       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'GRAILED')))
+       / (SUM(o.revenue) FILTER (WHERE o.platform = 'GRAILED'))) * 100, 2) AS grailed_profit_margin,
+       -- Instagram stats
+       COUNT(oi.order_item_id) FILTER (WHERE o.platform = 'Instagram') AS instagram_sales,
+       -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'Instagram')) AS instagram_product_cost,
+       -(SUM(o.shipping) FILTER (WHERE o.platform = 'Instagram')) AS instagram_shipping_cost,
+       SUM(o.revenue) FILTER (WHERE o.platform = 'Instagram') AS instagram_revenue,
+       (SUM(o.revenue) FILTER (WHERE o.platform = 'Instagram') 
+       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'Instagram')) 
+       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'Instagram'))) AS instagram_profit,
+       ROUND(((SUM(o.revenue) FILTER (WHERE o.platform = 'Instagram') 
+       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'Instagram')) 
+       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'Instagram')))
+       / (SUM(o.revenue) FILTER (WHERE o.platform = 'Instagram'))) * 100, 2) AS instagram_profit_margin,
+       -- archivelol website stats
+       COUNT(oi.order_item_id) FILTER (WHERE o.platform = 'archivelol website') AS website_sales,
+       -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'archivelol website')) AS website_product_cost,
+       -(SUM(o.shipping) FILTER (WHERE o.platform = 'archivelol website')) AS website_shipping_cost,
+       SUM(o.revenue) FILTER (WHERE o.platform = 'archivelol website') AS website_revenue,
+       (SUM(o.revenue) FILTER (WHERE o.platform = 'archivelol website') 
+       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'archivelol website')) 
+       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'archivelol website'))) AS website_profit,
+       ROUND(((SUM(o.revenue) FILTER (WHERE o.platform = 'archivelol website') 
+       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'archivelol website')) 
+       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'archivelol website')))
+       / (SUM(o.revenue) FILTER (WHERE o.platform = 'archivelol website'))) * 100, 2) AS website_profit_margin,
+       -- In Person stats
+       COUNT(oi.order_item_id) FILTER (WHERE o.platform = 'In Person') AS inperson_sales,
+       -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'In Person')) AS inperson_product_cost,
+       -(SUM(o.shipping) FILTER (WHERE o.platform = 'In Person')) AS inperson_shipping_cost,
+       SUM(o.revenue) FILTER (WHERE o.platform = 'In Person') AS inperson_revenue,
+       (SUM(o.revenue) FILTER (WHERE o.platform = 'In Person') 
+       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'In Person')) 
+       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'In Person'))) AS inperson_profit,
+       ROUND(((SUM(o.revenue) FILTER (WHERE o.platform = 'In Person') 
+       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'In Person')) 
+       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'In Person')))
+       / (SUM(o.revenue) FILTER (WHERE o.platform = 'In Person'))) * 100, 2) AS inperson_profit_margin,
+       -- total units sold stats
+       COUNT(oi.order_item_id) AS total_units_sold,
+       -(SUM(oi.item_paid)) AS total_product_cost,
+       -(SUM(o.shipping)) AS total_shipping_cost,
+       SUM(o.revenue) AS total_revenue,
+       (SUM(o.revenue)  + -(SUM(oi.item_paid)) + -(SUM(o.shipping))) AS total_profit,
+       ROUND(((SUM(o.revenue) + -(SUM(oi.item_paid)) + -(SUM(o.shipping)))
+       / SUM(o.revenue)) * 100, 2) AS total_profit_margin
+    FROM order_items AS oi
+    JOIN products AS p ON p.product_id = oi.product_id
+    JOIN orders AS o ON o.order_id = oi.order_id
+    GROUP BY 
+        p.product_id, p.product_name;
+
+-- all order_items time and profit profit margin
