@@ -1,6 +1,6 @@
 DROP VIEW IF EXISTS platform_product_sales;
 
-CREATE OR REPLACE VIEW platform_product_sales AS
+CREATE OR REPLACE VIEW vw_product_summary AS
 SELECT p.product_id, 
        p.product_name, 
        -- GRAILED stats
@@ -51,7 +51,7 @@ SELECT p.product_id,
        + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'In Person')) 
        + -(SUM(o.shipping) FILTER (WHERE o.platform = 'In Person')))
        / (SUM(o.revenue) FILTER (WHERE o.platform = 'In Person'))) * 100, 2) AS inperson_profit_margin,
-       -- total units sold stats
+       -- total units sold stats and refunded
        COUNT(oi.order_item_id) AS total_units_sold,
        -(SUM(oi.item_paid)) AS total_product_cost,
        -(SUM(o.shipping)) AS total_shipping_cost,
@@ -65,4 +65,25 @@ SELECT p.product_id,
     GROUP BY 
         p.product_id, p.product_name;
 
--- all order_items time and profit profit margin
+CREATE OR REPLACE VIEW vw_refund_summary AS
+SELECT o.platform, 
+       SUM(o.refunded) AS total_refunded,
+       -(SUM(o.refunded_used)) AS total_refunded_used,
+       (SUM(o.refunded) - SUM(o.refunded_used)) AS total_refunded_left
+    FROM orders AS o
+    GROUP BY
+        o.platform;
+
+CREATE OR REPLACE VIEW vw_total_summary AS
+SELECT SUM(o.refunded) AS total_refunded,
+       -(SUM(o.refunded_used)) AS total_refunded_used,
+       (SUM(o.refunded) - SUM(o.refunded_used)) AS total_refunded_left,
+       COUNT(oi.order_item_id) AS total_units_sold,
+       -(SUM(oi.item_paid)) AS total_product_cost,
+       -(SUM(o.shipping)) AS total_shipping_cost,
+       SUM(o.revenue) AS total_revenue,
+       (SUM(o.revenue)  + -(SUM(oi.item_paid)) + -(SUM(o.shipping))) AS total_profit,
+       ROUND(((SUM(o.revenue) + -(SUM(oi.item_paid)) + -(SUM(o.shipping)))
+       / SUM(o.revenue)) * 100, 2) AS total_profit_margin
+    FROM order_items AS oi
+    JOIN orders AS o ON o.order_id = oi.order_id;
