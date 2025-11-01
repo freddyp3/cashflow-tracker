@@ -87,3 +87,30 @@ SELECT SUM(o.refunded) AS total_refunded,
        / SUM(o.revenue)) * 100, 2) AS total_profit_margin
     FROM order_items AS oi
     JOIN orders AS o ON o.order_id = oi.order_id;
+
+CREATE OR REPLACE VIEW vw_platform_average AS
+SELECT o.platform,
+       ROUND(SUM(o.revenue) / COUNT(oi.order_id), 2) AS avg_rev,
+       ROUND(SUM(o.shipping)/ COUNT(oi.order_id), 2) AS avg_ship,
+       ROUND((SUM(o.revenue) - SUM(o.shipping) - SUM(oi.item_paid))
+       / COUNT(oi.order_id), 2) AS avg_profit,
+       ROUND(SUM(o.refunded)/ COUNT(oi.order_id), 2) AS avg_refunded,
+       ROUND(SUM(o.refunded_used)/ COUNT(oi.order_id), 2) AS avg_refunded_used
+    FROM order_items AS oi
+    JOIN orders AS o ON o.order_id = oi.order_id
+    JOIN products AS p ON p.product_id = oi.product_id
+    GROUP BY o.platform;
+
+CREATE OR REPLACE VIEW vw_product_average AS
+SELECT oi.product_id, 
+       p.product_name,
+       ROUND(SUM(o.revenue) / COUNT(oi.order_id), 2) AS avg_rev,
+       ROUND(SUM(o.shipping)/ COUNT(oi.order_id), 2) AS avg_ship,
+       ROUND((SUM(o.revenue) - SUM(o.shipping) - SUM(oi.item_paid))
+       / COUNT(oi.order_id), 2) AS avg_profit,
+       ROUND(SUM(o.refunded)/ COUNT(oi.order_id), 2) AS avg_refunded,
+       ROUND(SUM(o.refunded_used)/ COUNT(oi.order_id), 2) AS avg_refunded_used
+    FROM order_items AS oi
+    JOIN orders AS o ON o.order_id = oi.order_id
+    JOIN products AS p ON p.product_id = oi.product_id
+    GROUP BY oi.product_id, p.product_name;
