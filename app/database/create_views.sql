@@ -1,116 +1,183 @@
-DROP VIEW IF EXISTS platform_product_sales;
+CREATE OR REPLACE VIEW vw_counts AS
+SELECT order_id, 
+	   COUNT(*) AS item_count
+FROM order_items
+GROUP BY order_id;
 
-CREATE OR REPLACE VIEW vw_product_summary AS
-SELECT p.product_id, 
-       p.product_name, 
-       -- GRAILED stats
-       COUNT(oi.order_item_id) FILTER (WHERE o.platform = 'GRAILED') AS grailed_sales,
-       -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'GRAILED')) AS grailed_product_cost,
-       -(SUM(o.shipping) FILTER (WHERE o.platform = 'GRAILED')) AS grailed_shipping_cost,
-       SUM(o.revenue) FILTER (WHERE o.platform = 'GRAILED') AS grailed_revenue,
-       (SUM(o.revenue) FILTER (WHERE o.platform = 'GRAILED') 
-       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'GRAILED')) 
-       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'GRAILED'))) AS grailed_profit,
-       ROUND(((SUM(o.revenue) FILTER (WHERE o.platform = 'GRAILED') 
-       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'GRAILED')) 
-       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'GRAILED')))
-       / (SUM(o.revenue) FILTER (WHERE o.platform = 'GRAILED'))) * 100, 2) AS grailed_profit_margin,
-       -- Instagram stats
-       COUNT(oi.order_item_id) FILTER (WHERE o.platform = 'Instagram') AS instagram_sales,
-       -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'Instagram')) AS instagram_product_cost,
-       -(SUM(o.shipping) FILTER (WHERE o.platform = 'Instagram')) AS instagram_shipping_cost,
-       SUM(o.revenue) FILTER (WHERE o.platform = 'Instagram') AS instagram_revenue,
-       (SUM(o.revenue) FILTER (WHERE o.platform = 'Instagram') 
-       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'Instagram')) 
-       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'Instagram'))) AS instagram_profit,
-       ROUND(((SUM(o.revenue) FILTER (WHERE o.platform = 'Instagram') 
-       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'Instagram')) 
-       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'Instagram')))
-       / (SUM(o.revenue) FILTER (WHERE o.platform = 'Instagram'))) * 100, 2) AS instagram_profit_margin,
-       -- archivelol website stats
-       COUNT(oi.order_item_id) FILTER (WHERE o.platform = 'archivelol website') AS website_sales,
-       -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'archivelol website')) AS website_product_cost,
-       -(SUM(o.shipping) FILTER (WHERE o.platform = 'archivelol website')) AS website_shipping_cost,
-       SUM(o.revenue) FILTER (WHERE o.platform = 'archivelol website') AS website_revenue,
-       (SUM(o.revenue) FILTER (WHERE o.platform = 'archivelol website') 
-       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'archivelol website')) 
-       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'archivelol website'))) AS website_profit,
-       ROUND(((SUM(o.revenue) FILTER (WHERE o.platform = 'archivelol website') 
-       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'archivelol website')) 
-       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'archivelol website')))
-       / (SUM(o.revenue) FILTER (WHERE o.platform = 'archivelol website'))) * 100, 2) AS website_profit_margin,
-       -- In Person stats
-       COUNT(oi.order_item_id) FILTER (WHERE o.platform = 'In Person') AS inperson_sales,
-       -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'In Person')) AS inperson_product_cost,
-       -(SUM(o.shipping) FILTER (WHERE o.platform = 'In Person')) AS inperson_shipping_cost,
-       SUM(o.revenue) FILTER (WHERE o.platform = 'In Person') AS inperson_revenue,
-       (SUM(o.revenue) FILTER (WHERE o.platform = 'In Person') 
-       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'In Person')) 
-       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'In Person'))) AS inperson_profit,
-       ROUND(((SUM(o.revenue) FILTER (WHERE o.platform = 'In Person') 
-       + -(SUM(oi.item_paid) FILTER (WHERE o.platform = 'In Person')) 
-       + -(SUM(o.shipping) FILTER (WHERE o.platform = 'In Person')))
-       / (SUM(o.revenue) FILTER (WHERE o.platform = 'In Person'))) * 100, 2) AS inperson_profit_margin,
-       -- total units sold stats and refunded
-       COUNT(oi.order_item_id) AS total_units_sold,
-       -(SUM(oi.item_paid)) AS total_product_cost,
-       -(SUM(o.shipping)) AS total_shipping_cost,
-       SUM(o.revenue) AS total_revenue,
-       (SUM(o.revenue)  + -(SUM(oi.item_paid)) + -(SUM(o.shipping))) AS total_profit,
-       ROUND(((SUM(o.revenue) + -(SUM(oi.item_paid)) + -(SUM(o.shipping)))
-       / SUM(o.revenue)) * 100, 2) AS total_profit_margin
-    FROM order_items AS oi
-    JOIN products AS p ON p.product_id = oi.product_id
-    JOIN orders AS o ON o.order_id = oi.order_id
-    GROUP BY 
-        p.product_id, p.product_name;
+CREATE OR REPLACE VIEW vw_base AS
+SELECT o.order_id,
+	   c.item_count,
+	   o.platform,
+	   o.shipping, 
+	   SUM(oi.item_paid) AS items_cost, 
+	   o.shipping + SUM(oi.item_paid) AS total_cost,
+	   o.revenue,
+	   o.revenue - (o.shipping + SUM(oi.item_paid)) AS profit,
+	   o.refunded, 
+	   o.refunded_used,
+	   o.refunded - o.refunded_used AS net_refund,
+	   o.customer_name,
+	   o.shipping_location,
+	   o.order_date, 
+       ROUND((o.revenue - (o.shipping + SUM(oi.item_paid))) / o.revenue, 2) AS profit_margin
+FROM orders AS o
+JOIN order_items AS oi ON o.order_id = oi.order_id
+JOIN vw_counts AS c ON o.order_id = c.order_id
+WHERE o.disputed = FALSE
+GROUP BY o.order_id,
+         c.item_count,
+         o.platform,
+         o.shipping,
+         o.revenue,
+         o.refunded,
+         o.refunded_used,
+         o.customer_name,
+         o.shipping_location,
+         o.order_date;
 
-CREATE OR REPLACE VIEW vw_refund_summary AS
-SELECT o.platform, 
-       SUM(o.refunded) AS total_refunded,
-       -(SUM(o.refunded_used)) AS total_refunded_used,
-       (SUM(o.refunded) - SUM(o.refunded_used)) AS total_refunded_left
-    FROM orders AS o
-    GROUP BY
-        o.platform;
+CREATE OR REPLACE VIEW vw_product_base AS
+SELECT p.product_id,
+	   p.product_type,
+	   p.product_name,
+	   oi.item_paid,
+	   ROUND(o.shipping / c.item_count, 2) AS shipping,
+	   ROUND(o.revenue  / c.item_count, 2) AS revenue,
+	   ROUND(oi.item_paid + (o.shipping / c.item_count), 2) AS total_cost,
+	   ROUND((o.revenue / c.item_count) - (oi.item_paid + (o.shipping / c.item_count)), 2) AS profit,
+	   ROUND(o.refunded / c.item_count, 2) AS refunded, 
+	   ROUND(o.refunded_used / c.item_count, 2) AS refunded_used,
+	   ROUND((o.refunded - o.refunded_used) / c.item_count, 2) AS net_refund,
+	   p.cost AS item_cost_yuan,
+       o.platform,
+       o.order_date
+FROM orders AS o
+JOIN order_items AS oi ON o.order_id = oi.order_id
+JOIN vw_counts AS c ON o.order_id = c.order_id
+JOIN products AS p ON oi.product_id = p.product_id  
+WHERE o.disputed = FALSE;
 
-CREATE OR REPLACE VIEW vw_total_summary AS
-SELECT SUM(o.refunded) AS total_refunded,
-       -(SUM(o.refunded_used)) AS total_refunded_used,
-       (SUM(o.refunded) - SUM(o.refunded_used)) AS total_refunded_left,
-       COUNT(oi.order_item_id) AS total_units_sold,
-       -(SUM(oi.item_paid)) AS total_product_cost,
-       -(SUM(o.shipping)) AS total_shipping_cost,
-       SUM(o.revenue) AS total_revenue,
-       (SUM(o.revenue)  + -(SUM(oi.item_paid)) + -(SUM(o.shipping))) AS total_profit,
-       ROUND(((SUM(o.revenue) + -(SUM(oi.item_paid)) + -(SUM(o.shipping)))
-       / SUM(o.revenue)) * 100, 2) AS total_profit_margin
-    FROM order_items AS oi
-    JOIN orders AS o ON o.order_id = oi.order_id;
+CREATE OR REPLACE VIEW vw_product_stats AS
+SELECT b.product_id,
+	   b.product_name,
+	   SUM(b.shipping) AS product_total_shipping,
+	   SUM(b.item_paid) AS item_total_cost,
+	   SUM(b.total_cost) AS product_total_cost,
+	   SUM(b.revenue) AS product_total_revenue,
+	   SUM(b.profit) AS product_total_profit,
+	   SUM(b.refunded) AS product_total_refunded,
+	   SUM(b.refunded_used) AS product_total_refunded_used,
+	   SUM(b.net_refund) AS product_net_refund,
+	   ROUND(SUM(b.item_paid) / COUNT(*), 2) AS avg_item_cost,
+	   ROUND(SUM(b.revenue) / COUNT(*), 2) AS avg_product_revenue,
+	   ROUND(SUM(b.profit) / COUNT(*), 2) AS avg_product_profit,
+   	   ROUND(SUM(b.shipping) / COUNT(*), 2) AS avg_shipping_per_unit, -- nat geo avg skewed because 10 sold in person
+	   ROUND(SUM(b.profit)/SUM(b.revenue), 2) AS product_profit_margin,
+	   COUNT(*) AS units_sold
+FROM vw_product_base AS b
+GROUP BY 1, 2;
 
-CREATE OR REPLACE VIEW vw_platform_average AS
-SELECT o.platform,
-       ROUND(SUM(o.revenue) / COUNT(oi.order_id), 2) AS avg_rev,
-       ROUND(SUM(o.shipping)/ COUNT(oi.order_id), 2) AS avg_ship,
-       ROUND((SUM(o.revenue) - SUM(o.shipping) - SUM(oi.item_paid))
-       / COUNT(oi.order_id), 2) AS avg_profit,
-       ROUND(SUM(o.refunded)/ COUNT(oi.order_id), 2) AS avg_refunded,
-       ROUND(SUM(o.refunded_used)/ COUNT(oi.order_id), 2) AS avg_refunded_used
-    FROM order_items AS oi
-    JOIN orders AS o ON o.order_id = oi.order_id
-    JOIN products AS p ON p.product_id = oi.product_id
-    GROUP BY o.platform;
+CREATE OR REPLACE VIEW vw_platform_stats AS
+SELECT b.platform,
+	   SUM(b.shipping) AS platform_shipping,
+	   SUM(b.total_cost) AS platform_total_cost,
+	   SUM(b.revenue) AS platform_revenue,
+	   SUM(b.profit) AS platform_profit,
+	   SUM(b.refunded) AS platform_refunded,
+	   SUM(b.refunded_used) AS platform_refunded_used,
+	   SUM(b.net_refund) AS platform_net_refund,
+	   SUM(b.item_count) AS units_sold, 
+	   ROUND(SUM(b.revenue) / SUM(b.item_count), 2) AS avg_platform_revenue,
+	   ROUND(SUM(b.profit) / SUM(b.item_count), 2) AS avg_platform_profit,
+   	   ROUND(SUM(b.shipping) / SUM(b.item_count), 2) AS avg_shipping_per_unit,
+	   ROUND(SUM(b.profit)/SUM(b.revenue), 2) AS platform_profit_margin
+FROM vw_base AS b
+GROUP BY b.platform;
 
-CREATE OR REPLACE VIEW vw_product_average AS
-SELECT oi.product_id, 
-       p.product_name,
-       ROUND(SUM(o.revenue) / COUNT(oi.order_id), 2) AS avg_rev,
-       ROUND(SUM(o.shipping)/ COUNT(oi.order_id), 2) AS avg_ship,
-       ROUND((SUM(o.revenue) - SUM(o.shipping) - SUM(oi.item_paid))
-       / COUNT(oi.order_id), 2) AS avg_profit,
-       ROUND(SUM(o.refunded)/ COUNT(oi.order_id), 2) AS avg_refunded,
-       ROUND(SUM(o.refunded_used)/ COUNT(oi.order_id), 2) AS avg_refunded_used
-    FROM order_items AS oi
-    JOIN orders AS o ON o.order_id = oi.order_id
-    JOIN products AS p ON p.product_id = oi.product_id
-    GROUP BY oi.product_id, p.product_name;
+CREATE OR REPLACE VIEW vw_product_by_platform_stats AS
+SELECT b.product_id,
+	   b.product_name,
+	   b.platform,
+	   SUM(b.shipping) AS product_total_shipping,
+	   SUM(b.item_paid) AS item_total_cost,
+	   SUM(b.total_cost) AS product_total_cost,
+	   SUM(b.revenue) AS product_total_revenue,
+	   SUM(b.profit) AS product_total_profit,
+	   SUM(b.refunded) AS product_total_refunded,
+	   SUM(b.refunded_used) AS product_total_refunded_used,
+	   SUM(b.net_refund) AS product_net_refund,
+	   ROUND(SUM(b.item_paid) / COUNT(*), 2) AS avg_item_cost,
+	   ROUND(SUM(b.revenue) / COUNT(*), 2) AS avg_product_revenue,
+	   ROUND(SUM(b.profit) / COUNT(*), 2) AS avg_product_profit,
+   	   ROUND(SUM(b.shipping) / COUNT(*), 2) AS avg_shipping_per_unit,
+	   ROUND(SUM(b.profit)/SUM(b.revenue), 2) AS product_profit_margin,
+	   COUNT(*) AS units_sold 
+FROM vw_product_base AS b
+GROUP BY 1, 2, 3;
+
+-- Views for graphs
+
+CREATE OR REPLACE VIEW vw_platform_month AS
+SELECT b.platform,
+	   DATE_TRUNC('month', b.order_date)::date AS month,
+	   SUM(b.total_cost) AS month_cost,
+	   SUM(b.revenue) AS month_revenue,
+	   SUM(b.profit) AS month_profit,
+	   SUM(b.item_count) AS month_units_sold
+FROM vw_base AS b
+GROUP BY 1, 2;
+
+CREATE OR REPLACE VIEW vw_product_month AS
+SELECT b.product_id,
+       b.product_name,
+	   DATE_TRUNC('month', b.order_date)::date AS month,
+	   SUM(b.total_cost) AS month_cost,
+	   SUM(b.revenue) AS month_revenue,
+	   SUM(b.profit) AS month_profit,
+	   COUNT(*) AS month_units_sold 
+FROM vw_product_base AS b
+GROUP BY 1, 2, 3;
+
+CREATE OR REPLACE VIEW vw_product_by_platform_month AS
+SELECT b.product_id,
+       b.product_name,
+       b.platform,
+	   DATE_TRUNC('month', b.order_date)::date AS month,
+	   SUM(b.total_cost) AS month_cost,
+	   SUM(b.revenue) AS month_revenue,
+	   SUM(b.profit) AS month_profit,
+	   COUNT(*) AS month_units_sold 
+FROM vw_product_base AS b
+GROUP BY 1, 2, 3, 4;
+
+CREATE OR REPLACE VIEW vw_platform_day AS
+SELECT b.platform,
+	   DATE_TRUNC('day', b.order_date)::date AS day,
+	   SUM(b.total_cost) AS day_cost,
+	   SUM(b.revenue) AS day_revenue,
+	   SUM(b.profit) AS day_profit,
+	   SUM(b.item_count) AS day_units_sold
+FROM vw_base AS b
+GROUP BY 1, 2;
+
+CREATE OR REPLACE VIEW vw_product_day AS
+SELECT b.product_id,
+       b.product_name,
+	   DATE_TRUNC('day', b.order_date)::date AS day,
+	   SUM(b.total_cost) AS day_cost,
+	   SUM(b.revenue) AS day_revenue,
+	   SUM(b.profit) AS day_profit,
+	   COUNT(*) AS day_units_sold 
+FROM vw_product_base AS b
+GROUP BY 1, 2, 3;
+
+CREATE OR REPLACE VIEW vw_product_by_platform_day AS
+SELECT b.product_id,
+       b.product_name,
+       b.platform,
+	   DATE_TRUNC('day', b.order_date)::date AS day,
+	   SUM(b.total_cost) AS day_cost,
+	   SUM(b.revenue) AS day_revenue,
+	   SUM(b.profit) AS day_profit,
+	   COUNT(*) AS day_units_sold 
+FROM vw_product_base AS b
+GROUP BY 1, 2, 3, 4;
