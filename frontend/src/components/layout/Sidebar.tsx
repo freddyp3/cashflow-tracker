@@ -23,7 +23,7 @@ const sections: NavSection[] = [
   },
   {
     links: [
-      { to: '/visualization/globe', label: 'Cool Visualization' },
+      { to: '/visualization/globe', label: 'Shipping Map' },
     ],
   },
 ];
