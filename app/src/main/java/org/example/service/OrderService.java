@@ -1,5 +1,7 @@
 package org.example.service;
 
+import java.util.List;
+
 import org.example.dto.OrderItemRequest;
 import org.example.dto.OrderRequest;
 import org.example.entity.Order;
@@ -7,10 +9,9 @@ import org.example.entity.OrderItem;
 import org.example.entity.Product;
 import org.example.repository.OrderRepository;
 import org.example.repository.ProductRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Business logic for order CRUD operations.
@@ -32,6 +33,14 @@ public class OrderService {
     }
 
     public List<Order> findAll() {
+        return orderRepo.findAll();
+    }
+
+    // added by me
+    public List<Order> findAll(String sort) {
+        if ("orderDate".equals(sort)) {
+            return orderRepo.findAll(Sort.by(Sort.Direction.DESC, "orderDate"));
+        }
         return orderRepo.findAll();
     }
 
