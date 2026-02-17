@@ -15,10 +15,11 @@ export default function OrdersPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Order | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [sort, setSort] = useState<string | null>(null);
 
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: getOrders,
+    queryKey: ['orders', sort],
+    queryFn: () => getOrders(sort),
   });
 
   const createMutation = useMutation({
@@ -70,14 +71,26 @@ export default function OrdersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Orders</h1>
-        {!showForm && (
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => { setEditing(null); setShowForm(true); }}
-            className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-md hover:bg-amber-600 transition-colors"
+            onClick={() => setSort(sort === 'orderDate' ? null : 'orderDate')}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              sort === 'orderDate'
+                ? 'bg-amber-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
-            + New Order
+            {sort === 'orderDate' ? 'Sorted by Date ✕' : 'Sort by Date'}
           </button>
-        )}
+          {!showForm && (
+            <button
+              onClick={() => { setEditing(null); setShowForm(true); }}
+              className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-md hover:bg-amber-600 transition-colors"
+            >
+              + New Order
+            </button>
+          )}
+        </div>
       </div>
 
       {showForm && (

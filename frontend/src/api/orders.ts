@@ -7,8 +7,10 @@ import client from './client';
 import type { Order, OrderRequest } from '../types';
 
 /** GET /api/orders - Fetch all orders with nested items. */
-export async function getOrders(): Promise<Order[]> {
-  const { data } = await client.get<Order[]>('/orders');
+export async function getOrders(sort?: string | null): Promise<Order[]> {
+  const { data } = await client.get<Order[]>('/orders', {
+    params: sort ? { sort } : undefined,
+  });
   return data;
 }
 
