@@ -13,6 +13,7 @@ import OrdersPage from './pages/OrdersPage';
 import ProductStatsPage from './pages/ProductStatsPage';
 import PlatformStatsPage from './pages/PlatformStatsPage';
 import PersonalHaulsPage from './pages/PersonalHaulsPage';
+import GlobePage from './pages/GlobePage';
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/stats/products" element={<ProductStatsPage />} />
             <Route path="/stats/platforms" element={<PlatformStatsPage />} />
             <Route path="/personal-hauls" element={<PersonalHaulsPage />} />
+            <Route path="/visualization/globe" element={<GlobePage />} />
           </Route>
         </Routes>
       </BrowserRouter>
