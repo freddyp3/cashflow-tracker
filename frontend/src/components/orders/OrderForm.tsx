@@ -38,8 +38,9 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
   const [customerName, setCustomerName] = useState('');
   const [shippingLocation, setShippingLocation] = useState('');
   const [disputed, setDisputed] = useState(false);
+  const [draft, setDraft] = useState(false);
   const [orderDate, setOrderDate] = useState('');
-  const [deliveredDate, setDeliveredDate] = useState('');
+
   const [note, setNote] = useState('');
   const [items, setItems] = useState<ItemData[]>([emptyItem()]);
 
@@ -58,8 +59,9 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
       setCustomerName(order.customerName);
       setShippingLocation(order.shippingLocation);
       setDisputed(order.disputed);
+      setDraft(order.draft);
       setOrderDate(order.orderDate || '');
-      setDeliveredDate(order.deliveredDate || '');
+
       setNote(order.note || '');
       setItems(
         order.items.map((i) => ({
@@ -113,8 +115,9 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
       customerName: customerName || 'TBD',
       shippingLocation: shippingLocation || 'TBD',
       disputed,
+      draft,
       orderDate: orderDate || null,
-      deliveredDate: deliveredDate || null,
+      deliveredDate: null,
       note: note || null,
       items: items
         .filter((i) => i.productId > 0)
@@ -156,7 +159,7 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Platform</label>
-          <input type="text" value={platform} onChange={(e) => setPlatform(e.target.value)} required className={inputClass} />
+          <input type="text" value={platform} onChange={(e) => setPlatform(e.target.value)} required={!draft} className={inputClass} />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Shipping ({currency})</label>
@@ -190,15 +193,16 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
           <label className="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
           <input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} className={inputClass} />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Delivered Date</label>
-          <input type="date" value={deliveredDate} onChange={(e) => setDeliveredDate(e.target.value)} className={inputClass} />
-        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Note</label>
           <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className={inputClass} />
         </div>
-        <div className="flex items-end">
+        <div className="flex items-end gap-4">
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={draft} onChange={(e) => setDraft(e.target.checked)} className="rounded border-gray-300 text-amber-500 focus:ring-amber-500" />
+            Draft
+          </label>
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input type="checkbox" checked={disputed} onChange={(e) => setDisputed(e.target.checked)} className="rounded border-gray-300 text-amber-500 focus:ring-amber-500" />
             Disputed
@@ -238,7 +242,7 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
           type="submit"
           className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-md hover:bg-amber-600 transition-colors"
         >
-          {order ? 'Update' : 'Create'}
+          {draft ? 'Save Draft' : order ? 'Update' : 'Create'}
         </button>
         <button
           type="button"

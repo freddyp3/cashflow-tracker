@@ -81,6 +81,10 @@ public class OrderService {
         order.setCustomerName(req.getCustomerName());
         order.setShippingLocation(req.getShippingLocation());
         order.setDisputed(req.getDisputed());
+        order.setDraft(req.getDraft());
+        if (Boolean.TRUE.equals(req.getDraft()) && (req.getPlatform() == null || req.getPlatform().isBlank())) {
+            order.setPlatform("");
+        }
         order.setOrderDate(req.getOrderDate());
         order.setDeliveredDate(req.getDeliveredDate());
         order.setNote(req.getNote());

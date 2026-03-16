@@ -57,6 +57,10 @@ public class Order {
     @Column(nullable = false)
     private Boolean disputed = false;
 
+    /** Whether this order is a draft. Draft orders are incomplete and excluded from stats views. */
+    @Column(nullable = false)
+    private Boolean draft = false;
+
     /** Date the order was placed. */
     @Column(name = "order_date")
     private LocalDate orderDate;
@@ -103,6 +107,9 @@ public class Order {
 
     public Boolean getDisputed() { return disputed; }
     public void setDisputed(Boolean disputed) { this.disputed = disputed; }
+
+    public Boolean getDraft() { return draft; }
+    public void setDraft(Boolean draft) { this.draft = draft; }
 
     public LocalDate getOrderDate() { return orderDate; }
     public void setOrderDate(LocalDate orderDate) { this.orderDate = orderDate; }

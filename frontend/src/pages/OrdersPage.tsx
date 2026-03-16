@@ -16,6 +16,7 @@ export default function OrdersPage() {
   const [editing, setEditing] = useState<Order | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [sort, setSort] = useState<string | null>(null);
+  const [hideDrafts, setHideDrafts] = useState(false);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders', sort],
@@ -73,6 +74,16 @@ export default function OrdersPage() {
         <h1 className="text-2xl font-semibold text-gray-900">Orders</h1>
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setHideDrafts(!hideDrafts)}
+            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+              hideDrafts
+                ? 'bg-amber-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {hideDrafts ? 'Drafts Hidden' : 'Hide Drafts'}
+          </button>
+          <button
             onClick={() => setSort(sort === 'orderDate' ? null : 'orderDate')}
             className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
               sort === 'orderDate'
@@ -103,7 +114,9 @@ export default function OrdersPage() {
         </div>
       )}
 
-      <OrderList orders={orders} onEdit={handleEdit} onDelete={handleDelete} />
+      <OrderList orders={
+        (hideDrafts ? orders.filter(o => !o.draft) : [...orders].sort((a, b) => (a.draft === b.draft ? 0 : a.draft ? -1 : 1)))
+      } onEdit={handleEdit} onDelete={handleDelete} />
     </div>
   );
 }

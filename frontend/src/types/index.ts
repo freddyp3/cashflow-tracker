@@ -42,6 +42,8 @@ export interface Order {
   shippingLocation: string;
   /** Disputed orders are excluded from analytics views. */
   disputed: boolean;
+  /** Draft orders are incomplete and excluded from analytics views. */
+  draft: boolean;
   /** ISO date string (YYYY-MM-DD) or null. */
   orderDate: string | null;
   deliveredDate: string | null;
@@ -59,6 +61,7 @@ export interface OrderRequest {
   customerName: string;
   shippingLocation: string;
   disputed: boolean;
+  draft: boolean;
   orderDate: string | null;
   deliveredDate: string | null;
   note: string | null;

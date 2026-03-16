@@ -25,14 +25,18 @@ export default function OrderList({ orders, onEdit, onDelete }: Props) {
             <th className="text-right px-4 py-3 font-medium text-gray-500">Shipping</th>
             <th className="text-right px-4 py-3 font-medium text-gray-500">Refunded (CNY)</th>
             <th className="text-left px-4 py-3 font-medium text-gray-500">Date</th>
+
             <th className="text-center px-4 py-3 font-medium text-gray-500">Items</th>
             <th className="text-right px-4 py-3 font-medium text-gray-500">Actions</th>
           </tr>
         </thead>
         <tbody>
           {orders.map((o) => (
-            <tr key={o.orderId} className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="px-4 py-3 text-gray-500">{o.orderId}</td>
+            <tr key={o.orderId} className={`border-b border-gray-100 hover:bg-gray-50 ${o.draft ? 'opacity-60' : ''}`}>
+              <td className="px-4 py-3 text-gray-500">
+                {o.orderId}
+                {o.draft && <span className="ml-2 inline-block px-1.5 py-0.5 text-xs font-semibold rounded bg-amber-100 text-amber-700">DRAFT</span>}
+              </td>
               <td className="px-4 py-3 font-medium text-gray-900">{o.platform}</td>
               <td className="px-4 py-3 text-gray-600">{o.customerName}</td>
               <td className="px-4 py-3 text-gray-600 text-xs">{o.shippingLocation}</td>
@@ -40,6 +44,7 @@ export default function OrderList({ orders, onEdit, onDelete }: Props) {
               <td className="px-4 py-3 text-right text-gray-600">${o.shipping.toFixed(2)}</td>
               <td className="px-4 py-3 text-right text-gray-600">¥{o.refunded.toFixed(2)}</td>
               <td className="px-4 py-3 text-gray-600">{o.orderDate || '—'}</td>
+
               <td className="px-4 py-3 text-center text-gray-500">{o.items.length}</td>
               <td className="px-4 py-3 text-right">
                 <button onClick={() => onEdit(o)} className="text-amber-600 hover:text-amber-700 font-medium mr-3">
