@@ -30,6 +30,7 @@ CREATE TABLE orders (
     customer_name varchar(200) DEFAULT 'TBD',  -- customer display name
     shipping_location varchar(200) DEFAULT 'TBD', -- format: "City, State, COUNTRY" (country extracted for filtering)
     disputed BOOLEAN NOT NULL DEFAULT FALSE,   -- disputed orders excluded from stats views
+    draft BOOLEAN NOT NULL DEFAULT FALSE,       -- draft orders are incomplete and excluded from stats views
     order_date DATE,                           -- date order was placed
     delivered_date DATE,                       -- date order was delivered (for delivery time analysis)
     note TEXT DEFAULT NULL                     -- optional free-text note

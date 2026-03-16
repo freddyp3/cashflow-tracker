@@ -2,7 +2,7 @@
 -- archivelol Analytics Views
 -- ============================================================================
 -- These views power the stats and time-series chart endpoints in StatsController.
--- All views exclude disputed orders (WHERE disputed = FALSE).
+-- All views exclude disputed orders (WHERE disputed = FALSE) and draft orders (WHERE draft = FALSE).
 -- View hierarchy:
 --   vw_counts       -> vw_base         -> vw_platform_stats, vw_platform_month, vw_platform_day
 --                   -> vw_product_base  -> vw_product_stats, vw_product_month, vw_product_day
@@ -40,7 +40,7 @@ SELECT o.order_id,
 FROM orders AS o
 JOIN order_items AS oi ON o.order_id = oi.order_id
 JOIN vw_counts AS c ON o.order_id = c.order_id
-WHERE o.disputed = FALSE
+WHERE o.disputed = FALSE AND o.draft = FALSE
 GROUP BY o.order_id,
          c.item_count,
          o.platform,
@@ -75,7 +75,7 @@ FROM orders AS o
 JOIN order_items AS oi ON o.order_id = oi.order_id
 JOIN vw_counts AS c ON o.order_id = c.order_id
 JOIN products AS p ON oi.product_id = p.product_id
-WHERE o.disputed = FALSE;
+WHERE o.disputed = FALSE AND o.draft = FALSE;
 
 -- ── Aggregate Stats Views ─────────────────────────────────────────────────────
 

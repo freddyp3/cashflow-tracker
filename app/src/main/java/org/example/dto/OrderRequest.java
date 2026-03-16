@@ -20,6 +20,7 @@ public class OrderRequest {
     private String customerName = "TBD";
     private String shippingLocation = "TBD";
     private Boolean disputed = false;
+    private Boolean draft = false;
     private LocalDate orderDate;
     private LocalDate deliveredDate;
     private String note;
@@ -48,6 +49,9 @@ public class OrderRequest {
 
     public Boolean getDisputed() { return disputed; }
     public void setDisputed(Boolean disputed) { this.disputed = disputed; }
+
+    public Boolean getDraft() { return draft; }
+    public void setDraft(Boolean draft) { this.draft = draft; }
 
     public LocalDate getOrderDate() { return orderDate; }
     public void setOrderDate(LocalDate orderDate) { this.orderDate = orderDate; }

@@ -22,6 +22,7 @@ public class OrderResponse {
     private String customerName;
     private String shippingLocation;
     private Boolean disputed;
+    private Boolean draft;
     private LocalDate orderDate;
     private LocalDate deliveredDate;
     private String note;
@@ -38,6 +39,7 @@ public class OrderResponse {
         r.customerName = order.getCustomerName();
         r.shippingLocation = order.getShippingLocation();
         r.disputed = order.getDisputed();
+        r.draft = order.getDraft();
         r.orderDate = order.getOrderDate();
         r.deliveredDate = order.getDeliveredDate();
         r.note = order.getNote();
@@ -56,6 +58,7 @@ public class OrderResponse {
     public String getCustomerName() { return customerName; }
     public String getShippingLocation() { return shippingLocation; }
     public Boolean getDisputed() { return disputed; }
+    public Boolean getDraft() { return draft; }
     public LocalDate getOrderDate() { return orderDate; }
     public LocalDate getDeliveredDate() { return deliveredDate; }
     public String getNote() { return note; }
