@@ -39,7 +39,7 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
   const [shippingLocation, setShippingLocation] = useState('');
   const [disputed, setDisputed] = useState(false);
   const [draft, setDraft] = useState(false);
-  const [orderDate, setOrderDate] = useState('');
+  const [orderDate, setOrderDate] = useState(new Date().toISOString().slice(0, 10));
 
   const [note, setNote] = useState('');
   const [items, setItems] = useState<ItemData[]>([emptyItem()]);
@@ -60,7 +60,7 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
       setShippingLocation(order.shippingLocation);
       setDisputed(order.disputed);
       setDraft(order.draft);
-      setOrderDate(order.orderDate || '');
+      setOrderDate(order.orderDate || new Date().toISOString().slice(0, 10));
 
       setNote(order.note || '');
       setItems(
