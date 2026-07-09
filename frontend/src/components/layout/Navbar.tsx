@@ -21,7 +21,7 @@ export default function Navbar() {
     <nav className="border-b border-gray-200 bg-white">
       <div className="mx-auto max-w-7xl px-6 flex items-center h-14 gap-8">
         <Link to="/" className="text-lg font-semibold text-gray-900">
-          archivelol
+          cashflow-tracker
         </Link>
         <div className="flex gap-1">
           {links.map((link) => (

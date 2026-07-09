@@ -25,7 +25,7 @@ public class Order {
     @Column(name = "order_id")
     private Integer orderId;
 
-    /** Sales channel (e.g. "Instagram", "GRAILED", "In Person", "archivelol website"). */
+    /** Sales channel (e.g. "Instagram", "GRAILED", "In Person", "cashflow-tracker website"). */
     @Column(nullable = false, length = 30)
     private String platform;
 

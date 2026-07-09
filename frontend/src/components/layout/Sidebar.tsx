@@ -35,7 +35,7 @@ export default function Sidebar() {
     <aside className="w-56 shrink-0 bg-white border-r border-gray-200 min-h-screen">
       <div className="px-5 py-6">
         <Link to="/" className="text-lg font-semibold text-gray-900">
-          archivelol
+          cashflow-tracker
         </Link>
       </div>
       <nav className="flex flex-col px-3">

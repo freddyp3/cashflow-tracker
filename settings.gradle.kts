@@ -11,5 +11,5 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-rootProject.name = "archivelol_project"
+rootProject.name = "cashflow-tracker"
 include("app")
