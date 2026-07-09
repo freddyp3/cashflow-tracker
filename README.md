@@ -10,7 +10,7 @@ track profits than on paper.
 
 So I created this.
 
-> **🎬 Demo:** [Watch the demo video](docs/cashflow-demo.mp4)
+> **Demo:** [Watch the demo video](docs/cashflow-demo.mp4)
 
 ## How it's built
 
