@@ -11,6 +11,7 @@ track profits than on paper.
 So I created this.
 
 > **Demo:** [Watch the demo video](docs/cashflow-demo.mp4)
+> For a playable version of the demo, view it on [my website](https://fpettit-portfolio.vercel.app/projects/cashflow-tracker).
 
 ## How it's built
 
