@@ -3,7 +3,14 @@
 
 # Ignore Gradle build output directory
 build
+app/bin
 
 # Frontend
 frontend/node_modules
 frontend/dist
+
+# OS junk
+.DS_Store
+
+# Sensitive data - contains real customer names/addresses, keep local only
+app/database/insert_data.sql
