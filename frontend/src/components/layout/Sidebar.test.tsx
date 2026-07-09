@@ -11,9 +11,9 @@ function renderSidebar(route = '/') {
 }
 
 describe('Sidebar', () => {
-  it('renders the Cool Visualization link pointing to /visualization/globe', () => {
+  it('renders the Shipping Map link pointing to /visualization/globe', () => {
     renderSidebar();
-    const link = screen.getByRole('link', { name: /cool visualization/i });
+    const link = screen.getByRole('link', { name: /shipping map/i });
     expect(link).toHaveAttribute('href', '/visualization/globe');
   });
 
@@ -26,7 +26,7 @@ describe('Sidebar', () => {
 
   it('highlights the active route with amber styling', () => {
     renderSidebar('/visualization/globe');
-    const link = screen.getByRole('link', { name: /cool visualization/i });
+    const link = screen.getByRole('link', { name: /shipping map/i });
     expect(link.className).toContain('bg-amber-50');
     expect(link.className).toContain('text-amber-700');
   });

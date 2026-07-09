@@ -17,6 +17,13 @@ vi.mock('../api/orders', () => ({
   getOrders: vi.fn(),
 }));
 
+// jsdom has no WebGL, so the real check would always hide the globe
+vi.mock('../components/globe/webglSupport', () => ({
+  default: vi.fn(() => true),
+}));
+
+import isWebGLAvailable from '../components/globe/webglSupport';
+
 import { getOrders } from '../api/orders';
 
 const mockFetch = vi.fn();
@@ -35,6 +42,7 @@ const fakeOrder = (shippingLocation: string, disputed = false): Order => ({
   orderDate: '2025-01-01',
   deliveredDate: '2025-01-05',
   note: null,
+  draft: false,
   items: [],
 });
 
@@ -47,6 +55,17 @@ describe('GlobePage', () => {
   beforeEach(() => {
     mockFetch.mockReset();
     vi.mocked(getOrders).mockReset();
+    vi.mocked(isWebGLAvailable).mockReturnValue(true);
+  });
+
+  it('shows a fallback message when WebGL is unavailable', () => {
+    vi.mocked(isWebGLAvailable).mockReturnValue(false);
+    mockFetch.mockReturnValue(new Promise(() => {}));
+    vi.mocked(getOrders).mockReturnValue(new Promise(() => {}));
+    render(<GlobePage />);
+    expect(screen.getByText(/The globe couldn't be displayed/)).toBeInTheDocument();
+    expect(screen.queryByText('Loading globe data...')).not.toBeInTheDocument();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it('shows loading state initially', () => {
@@ -60,7 +79,7 @@ describe('GlobePage', () => {
     mockFetch.mockReturnValue(new Promise(() => {}));
     vi.mocked(getOrders).mockReturnValue(new Promise(() => {}));
     render(<GlobePage />);
-    expect(screen.getByRole('heading', { name: 'Globe' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'My Shipping Adventures' })).toBeInTheDocument();
   });
 
   it('shows error when fetch fails', async () => {

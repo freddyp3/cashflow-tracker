@@ -4,6 +4,8 @@ import type { GlobeMethods } from 'react-globe.gl';
 import { MeshBasicMaterial } from 'three';
 import { getOrders } from '../api/orders';
 import DESTINATION_COORDS, { VANCOUVER } from '../data/destinationCoords';
+import GlobeErrorBoundary from '../components/globe/GlobeErrorBoundary';
+import isWebGLAvailable from '../components/globe/webglSupport';
 
 const GEOJSON_URL =
   'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson';
@@ -39,6 +41,7 @@ export default function GlobePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const globeMaterial = useMemo(() => new MeshBasicMaterial({ color: '#e5e7eb' }), []);
+  const webglSupported = useMemo(() => isWebGLAvailable(), []);
 
   const containerRef = (node: HTMLDivElement | null) => {
     if (observerRef.current) {
@@ -55,6 +58,7 @@ export default function GlobePage() {
   };
 
   useEffect(() => {
+    if (!webglSupported) return;
     Promise.all([
       fetch(GEOJSON_URL).then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -124,17 +128,30 @@ export default function GlobePage() {
         setError(err instanceof Error ? err.message : 'Failed to load data');
         setLoading(false);
       });
-  }, []);
+  }, [webglSupported]);
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">My Shipping Adventures</h1>
       <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-        {loading && <p className="text-gray-500">Loading globe data...</p>}
-        {error && <p className="text-red-600">Error: {error}</p>}
-        {!loading && !error && (
+        {!webglSupported && (
+          <div className="flex h-[600px] flex-col items-center justify-center text-center">
+            <p className="text-gray-700 font-medium">
+              The globe couldn&apos;t be displayed.
+            </p>
+            <p className="text-gray-500 text-sm mt-2 max-w-md">
+              Your browser has WebGL disabled, which the globe needs to render.
+              Try enabling &quot;Use graphics acceleration&quot; in your browser
+              settings and reloading the page.
+            </p>
+          </div>
+        )}
+        {webglSupported && loading && <p className="text-gray-500">Loading globe data...</p>}
+        {webglSupported && error && <p className="text-red-600">Error: {error}</p>}
+        {webglSupported && !loading && !error && (
           <div ref={containerRef} style={{ width: '100%', height: '600px', display: 'flex', justifyContent: 'center' }}>
             {containerWidth > 0 && (
+              <GlobeErrorBoundary>
               <Globe
                 ref={globeRef}
                 backgroundColor="#ffffff"
@@ -171,6 +188,7 @@ export default function GlobePage() {
                 width={containerWidth}
                 height={600}
               />
+              </GlobeErrorBoundary>
             )}
           </div>
         )}

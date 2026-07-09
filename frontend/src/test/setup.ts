@@ -6,7 +6,7 @@ globalThis.ResizeObserver = class ResizeObserver {
   constructor(cb: ResizeObserverCallback) {
     this.cb = cb;
   }
-  observe(target: Element) {
+  observe() {
     // Fire callback with a fake entry that has a non-zero width
     this.cb(
       [{ contentRect: { width: 800, height: 600 } } as unknown as ResizeObserverEntry],
