@@ -12,5 +12,9 @@ frontend/dist
 # OS junk
 .DS_Store
 
+# Stray root install and local Claude config
+node_modules
+.claude/
+
 # Sensitive data - contains real customer names/addresses, keep local only
 app/database/insert_data.sql
