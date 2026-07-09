@@ -1,5 +1,5 @@
 -- ============================================================================
--- archivelol Database Schema
+-- cashflow-tracker Database Schema
 -- ============================================================================
 -- E-commerce reselling business tracking system.
 -- Products are sourced from suppliers (costs in CNY).

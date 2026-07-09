@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Entry point for the archivelol Spring Boot application.
+ * Entry point for the cashflow-tracker Spring Boot application.
  *
  * <p>This application provides a REST API for managing an e-commerce reselling business.
  * It tracks products (sourced in CNY), orders across multiple sales platforms

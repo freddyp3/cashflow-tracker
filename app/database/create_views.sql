@@ -1,5 +1,5 @@
 -- ============================================================================
--- archivelol Analytics Views
+-- cashflow-tracker Analytics Views
 -- ============================================================================
 -- These views power the stats and time-series chart endpoints in StatsController.
 -- All views exclude disputed orders (WHERE disputed = FALSE) and draft orders (WHERE draft = FALSE).
