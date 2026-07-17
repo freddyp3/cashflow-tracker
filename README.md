@@ -6,7 +6,7 @@ Marketplace, then on Grailed, Depop, and eBay. Then I started to market my busin
 My videos did well and sales started to ramp up. I needed a better way to
 track profits than on paper.
 
-![My TikTok stats](docs/tiktok-stats.png)
+![My TikTok stats](docs/tiktok_stats_cropped.png)
 
 So I created this.
 
