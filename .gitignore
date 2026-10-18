@@ -24,3 +24,5 @@ app/database/insert_data.sql
 automation/.venv
 AGENTS.local.md
 .devin/config.local.json
+worker/credentials/
+worker/state/

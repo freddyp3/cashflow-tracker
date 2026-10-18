@@ -1,0 +1,29 @@
+From: "eBay" <order@ebay.ca>
+To: seller@example.test
+Subject: Your item sold: Retro Windbreaker!
+Date: Sat, 17 Oct 2026 15:48:02 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="EBAYALT42"
+
+--EBAYALT42
+Content-Type: text/plain; charset="UTF-8"
+
+Order #: 26-11455-00231
+Item price: CA$58.00
+Delivery: CA$11.25
+Buyer: maple_leaf88
+Size: XL
+Ships to: Winnipeg, MB, CAN
+
+--EBAYALT42
+Content-Type: text/html; charset="UTF-8"
+
+<html><body>
+<p>Order #: 26-11455-00231</p>
+<p>Item price: CA$58.00</p>
+<p>Delivery: CA$11.25</p>
+<p>Buyer: maple_leaf88</p>
+<p>Size: XL</p>
+<p>Ships to: Winnipeg, MB, CAN</p>
+</body></html>
+--EBAYALT42--

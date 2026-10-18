@@ -1,0 +1,18 @@
+From: "Grailed" <sales@grailed.com>
+To: seller@example.test
+Subject: Congrats, you sold Leather Biker Jacket
+Date: Thu, 15 Oct 2026 20:11:05 +0000
+MIME-Version: 1.0
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<html><body>
+<p>Order #: GRD-771455</p>
+<p>Sold price: US$220.00</p>
+<p>Shipping: US$14.00</p>
+<p>Buyer: jon_doe</p>
+<p>Size: L</p>
+<p>Ships to: Calgary, AB, CAN</p>
+<script>tracker()</script>
+<style>p { color: #000 }</style>
+</body></html>

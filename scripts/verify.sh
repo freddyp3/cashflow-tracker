@@ -9,6 +9,7 @@ ROOT="$(pwd)"
 FRONTEND_RESULT="SKIPPED"
 BACKEND_RESULT="SKIPPED"
 AUTOMATION_RESULT="SKIPPED"
+WORKER_RESULT="SKIPPED"
 
 run_layer() {
     local name="$1"; shift
@@ -22,6 +23,7 @@ run_layer() {
         Frontend)   FRONTEND_RESULT="$result" ;;
         Backend)    BACKEND_RESULT="$result" ;;
         Automation) AUTOMATION_RESULT="$result" ;;
+        Worker)     WORKER_RESULT="$result" ;;
     esac
 }
 
@@ -33,7 +35,8 @@ print_summary() {
     echo "  Frontend:   $FRONTEND_RESULT"
     echo "  Backend:    $BACKEND_RESULT"
     echo "  Automation: $AUTOMATION_RESULT"
-    if [ "$FRONTEND_RESULT" != "PASS" ] || [ "$BACKEND_RESULT" != "PASS" ] || [ "$AUTOMATION_RESULT" != "PASS" ]; then
+    echo "  Worker:     $WORKER_RESULT"
+    if [ "$FRONTEND_RESULT" != "PASS" ] || [ "$BACKEND_RESULT" != "PASS" ] || [ "$AUTOMATION_RESULT" != "PASS" ] || [ "$WORKER_RESULT" != "PASS" ]; then
         exit 1
     fi
 }
@@ -52,6 +55,13 @@ run_layer Backend bash -c '
 set -e
 cd "'"$ROOT"'"
 ./gradlew :app:test
+'
+
+run_layer Worker bash -c '
+set -e
+cd "'"$ROOT"'"
+docker compose up -d pubsub-emulator
+docker compose run --rm worker-test
 '
 
 run_layer Automation bash -c '

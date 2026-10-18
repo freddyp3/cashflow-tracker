@@ -24,5 +24,44 @@ services:
     ports:
       - "6379:6379"
 
+  pubsub-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=cashflow-local
+    ports:
+      - "8085:8085"
+
+  worker:
+    build: ./worker
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PUBSUB_PROJECT_ID: cashflow-local
+      TRACKER_API_URL: ${TRACKER_API_URL:-http://host.docker.internal:8080}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+    volumes:
+      - ${GMAIL_CREDENTIALS_DIR:-./worker/credentials}:/secrets:ro
+      - workerstate:/state
+    ports:
+      - "8090:8090"
+    depends_on:
+      - pubsub-emulator
+
+  worker-test:
+    profiles: ["test"]
+    image: golang:1.23-alpine
+    working_dir: /src
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
+      PUBSUB_PROJECT_ID: cashflow-local
+      GOFLAGS: -mod=mod
+      CGO_ENABLED: "0"
+    volumes:
+      - ./worker:/src
+      - gomodcache:/go/pkg/mod
+    command: sh -c "go vet ./... && go test ./..."
+    depends_on:
+      - pubsub-emulator
+
 volumes:
   pgdata:
+  gomodcache:
+  workerstate:
