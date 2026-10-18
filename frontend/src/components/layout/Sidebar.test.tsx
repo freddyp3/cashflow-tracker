@@ -30,4 +30,19 @@ describe('Sidebar', () => {
     expect(link.className).toContain('bg-amber-50');
     expect(link.className).toContain('text-amber-700');
   });
+
+  it('collapses to an icon rail below 1100px', () => {
+    const { container } = renderSidebar();
+    const aside = container.querySelector('aside');
+    expect(aside?.className).toContain('w-16');
+    expect(aside?.className).toContain('min-[1100px]:w-56');
+  });
+
+  it('gives every nav link a title attribute', () => {
+    renderSidebar();
+    const nav = screen.getByRole('navigation');
+    nav.querySelectorAll('a').forEach((link) => {
+      expect(link).toHaveAttribute('title');
+    });
+  });
 });
