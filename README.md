@@ -23,7 +23,7 @@ So I created this.
                                         │ REST
                                ┌────────┴────────┐
                                │ Python FastAPI  │──► Gmail API
-                               │ automation svc  │──► Grailed (Playwright)
+                               │ automation svc  │
                                └─────────────────┘
 ```
 
@@ -34,9 +34,8 @@ So I created this.
 - **Backend** — Spring Boot 3 (Java 21) REST API with controller/service/
   repository layering, JPA entities, and DTOs at the API boundary. Data lives
   in PostgreSQL, with SQL views powering the stats.
-- **Automation** — Python + FastAPI service running scheduled jobs: Gmail
-  ingestion with per-platform email parsers, and a Playwright bot managing
-  the Grailed relist cycle with its own SQLite action log.
+- **Automation** — Python + FastAPI service running scheduled Gmail ingest:
+  per-platform email parsers turn sale confirmations into draft orders.
 
 <details>
 <summary>If you have a use case for this, here's how to set it up locally:</summary>

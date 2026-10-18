@@ -17,15 +17,6 @@ class Settings(BaseSettings):
     gmail_processed_label: str = "order-tracker/imported"
     gmail_lookback_days: int = 14
 
-    relist_db_file: str = "state/relist.db"
-    grailed_storage_state: str = "state/grailed_auth.json"
-    relist_weekly_drop_pct: float = 5.0
-    relist_min_price_fraction: float = 0.6
-    relist_cycle_days: int = 30
-    relist_batch_size: int = 15
-    relist_headed: bool = False
-
-    schedule_relist_cron: str = "0 9 * * 1"
     schedule_ingest_minutes: int = 30
 
     def resolve(self, rel: str) -> Path:
@@ -36,5 +27,5 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Ensure the state directory exists for tokens, session storage and the DB.
+# Ensure the state directory exists for the Gmail token.
 (BASE_DIR / "state").mkdir(exist_ok=True)
