@@ -17,9 +17,11 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository repo;
+    private final StatsCache statsCache;
 
-    public ProductService(ProductRepository repo) {
+    public ProductService(ProductRepository repo, StatsCache statsCache) {
         this.repo = repo;
+        this.statsCache = statsCache;
     }
 
     public List<Product> findAll() {
@@ -32,7 +34,9 @@ public class ProductService {
     }
 
     public Product create(Product product) {
-        return repo.save(product);
+        Product saved = repo.save(product);
+        statsCache.evictAfterCommit();
+        return saved;
     }
 
     public Product update(Integer id, Product updated) {
@@ -41,10 +45,13 @@ public class ProductService {
         existing.setProductType(updated.getProductType());
         existing.setCost(updated.getCost());
         existing.setStockQuantity(updated.getStockQuantity());
-        return repo.save(existing);
+        Product saved = repo.save(existing);
+        statsCache.evictAfterCommit();
+        return saved;
     }
 
     public void delete(Integer id) {
         repo.deleteById(id);
+        statsCache.evictAfterCommit();
     }
 }

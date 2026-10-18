@@ -38,15 +38,17 @@ public class OrderService {
     private final GeocodingService geocodingService;
     private final PlatformService platformService;
     private final TransactionTemplate txTemplate;
+    private final StatsCache statsCache;
 
     public OrderService(OrderRepository orderRepo, ProductRepository productRepo,
                         GeocodingService geocodingService, PlatformService platformService,
-                        PlatformTransactionManager txManager) {
+                        PlatformTransactionManager txManager, StatsCache statsCache) {
         this.orderRepo = orderRepo;
         this.productRepo = productRepo;
         this.geocodingService = geocodingService;
         this.platformService = platformService;
         this.txTemplate = new TransactionTemplate(txManager);
+        this.statsCache = statsCache;
     }
 
     public List<Order> findAll() {
@@ -71,7 +73,9 @@ public class OrderService {
         Order order = new Order();
         applyFields(order, req);
         addItems(order, req.getItems());
-        return orderRepo.save(order);
+        Order saved = orderRepo.save(order);
+        statsCache.evictAfterCommit();
+        return saved;
     }
 
     @Transactional
@@ -80,12 +84,15 @@ public class OrderService {
         applyFields(order, req);
         order.getItems().clear();
         addItems(order, req.getItems());
-        return orderRepo.save(order);
+        Order saved = orderRepo.save(order);
+        statsCache.evictAfterCommit();
+        return saved;
     }
 
     @Transactional
     public void delete(Integer id) {
         orderRepo.deleteById(id);
+        statsCache.evictAfterCommit();
     }
 
     /** Result of {@link #upsertByExternalRef}: the saved order plus whether it was newly created. */
@@ -106,11 +113,14 @@ public class OrderService {
      */
     public UpsertResult upsertByExternalRef(String platform, String externalRef, OrderRequest req) {
         platform = platformService.normalise(platform);
+        UpsertResult result;
         try {
-            return attemptUpsert(platform, externalRef, req);
+            result = attemptUpsert(platform, externalRef, req);
         } catch (DataIntegrityViolationException e) {
-            return attemptUpsert(platform, externalRef, req);
+            result = attemptUpsert(platform, externalRef, req);
         }
+        statsCache.evictAfterCommit();
+        return result;
     }
 
     /** One transactional create-or-update attempt for {@link #upsertByExternalRef}. */

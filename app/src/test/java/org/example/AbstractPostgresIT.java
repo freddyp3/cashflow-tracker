@@ -4,6 +4,7 @@ import java.nio.file.Path;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.MountableFile;
 
@@ -37,7 +38,11 @@ public abstract class AbstractPostgresIT {
                     MountableFile.forHostPath(Path.of("database", "migrations", "003_coordinates_platforms.sql")),
                     "/docker-entrypoint-initdb.d/04-migration-003.sql");
 
+    @ServiceConnection
+    static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine").withExposedPorts(6379);
+
     static {
         postgres.start();
+        redis.start();
     }
 }
