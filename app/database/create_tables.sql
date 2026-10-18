@@ -3,8 +3,8 @@
 -- ============================================================================
 -- E-commerce reselling business tracking system.
 -- Products are sourced from suppliers (costs in CNY).
--- Orders are placed on various platforms (Instagram, GRAILED, In Person, website).
--- All order monetary values are stored in CAD (converted at entry time).
+-- Orders are placed on various platforms ("Grailed", "In Person", "Website").
+-- Shipping/revenue are stored in CAD (converted at entry time); refunds in CNY.
 -- ============================================================================
 
 -- Products table: catalog of items available for resale.
@@ -18,17 +18,19 @@ CREATE TABLE products (
 );
 
 -- Orders table: customer orders placed across different sales platforms.
--- All monetary values (shipping, revenue, refunded, refunded_used) are in CAD.
+-- Shipping and revenue are in CAD; refunded/refunded_used are in CNY.
 -- Disputed orders are excluded from analytics views.
 CREATE TABLE orders (
     order_id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
-    platform varchar(30) NOT NULL,             -- sales channel (e.g. "Instagram", "GRAILED", "In Person")
+    platform varchar(30) NOT NULL,             -- sales channel (e.g. "Grailed", "In Person", "Website")
     shipping NUMERIC(10, 2) DEFAULT -1,        -- shipping cost in CAD; -1 = unknown/pending
     revenue NUMERIC(10, 2) DEFAULT 0,          -- total revenue received in CAD
-    refunded NUMERIC(10, 2) DEFAULT 0,         -- amount refunded to customer in CAD
-    refunded_used NUMERIC(10, 2) DEFAULT 0,    -- portion of refund that was reused/recouped
+    refunded NUMERIC(10, 2) DEFAULT 0,         -- amount refunded to customer in CNY (Chinese Yuan) — never CAD
+    refunded_used NUMERIC(10, 2) DEFAULT 0,    -- portion of refund that was reused/recouped, in CNY
     customer_name varchar(200) DEFAULT 'TBD',  -- customer display name
     shipping_location varchar(200) DEFAULT 'TBD', -- format: "City, State, COUNTRY" (country extracted for filtering)
+    latitude NUMERIC(9, 6),                    -- WGS-84 latitude of shipping_location, geocoded on save, NULL when unknown
+    longitude NUMERIC(9, 6),                   -- WGS-84 longitude of shipping_location, geocoded on save, NULL when unknown
     disputed BOOLEAN NOT NULL DEFAULT FALSE,   -- disputed orders excluded from stats views
     draft BOOLEAN NOT NULL DEFAULT FALSE,       -- draft orders are incomplete and excluded from stats views
     order_date DATE,                           -- date order was placed

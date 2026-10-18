@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  *
  * <p>This application provides a REST API for managing an e-commerce reselling business.
  * It tracks products (sourced in CNY), orders across multiple sales platforms
- * (Instagram, GRAILED, in-person, website), and personal haul cash flows.
+ * (Instagram, Grailed, in-person, website), and personal haul cash flows.
  * Analytics views in PostgreSQL power product/platform stats and time-series charts.</p>
  *
  * <p>The frontend (React + Vite) connects via {@code /api} proxy to this server on port 8080.</p>

@@ -8,7 +8,7 @@ import java.util.List;
  * Inbound DTO for creating or updating an order via {@code POST /api/orders}
  * or {@code PUT /api/orders/{id}}.
  *
- * <p>All monetary values should already be converted to CAD by the frontend.
+ * <p>Shipping and revenue are in CAD; {@code refunded}/{@code refundedUsed} are in CNY.
  * Contains a nested list of {@link OrderItemRequest}s for the line items.</p>
  */
 public class OrderRequest {
@@ -19,6 +19,8 @@ public class OrderRequest {
     private BigDecimal refundedUsed = BigDecimal.ZERO;
     private String customerName = "TBD";
     private String shippingLocation = "TBD";
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private Boolean disputed = false;
     private Boolean draft = false;
     private LocalDate orderDate;
@@ -46,6 +48,12 @@ public class OrderRequest {
 
     public String getShippingLocation() { return shippingLocation; }
     public void setShippingLocation(String shippingLocation) { this.shippingLocation = shippingLocation; }
+
+    public BigDecimal getLatitude() { return latitude; }
+    public void setLatitude(BigDecimal latitude) { this.latitude = latitude; }
+
+    public BigDecimal getLongitude() { return longitude; }
+    public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
 
     public Boolean getDisputed() { return disputed; }
     public void setDisputed(Boolean disputed) { this.disputed = disputed; }

@@ -21,6 +21,8 @@ public class OrderResponse {
     private BigDecimal refundedUsed;
     private String customerName;
     private String shippingLocation;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private Boolean disputed;
     private Boolean draft;
     private LocalDate orderDate;
@@ -39,6 +41,8 @@ public class OrderResponse {
         r.refundedUsed = order.getRefundedUsed();
         r.customerName = order.getCustomerName();
         r.shippingLocation = order.getShippingLocation();
+        r.latitude = order.getLatitude();
+        r.longitude = order.getLongitude();
         r.disputed = order.getDisputed();
         r.draft = order.getDraft();
         r.orderDate = order.getOrderDate();
@@ -59,6 +63,8 @@ public class OrderResponse {
     public BigDecimal getRefundedUsed() { return refundedUsed; }
     public String getCustomerName() { return customerName; }
     public String getShippingLocation() { return shippingLocation; }
+    public BigDecimal getLatitude() { return latitude; }
+    public BigDecimal getLongitude() { return longitude; }
     public Boolean getDisputed() { return disputed; }
     public Boolean getDraft() { return draft; }
     public LocalDate getOrderDate() { return orderDate; }

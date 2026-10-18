@@ -46,6 +46,8 @@ class OrderControllerWebTest {
         order.setOrderId(1);
         order.setPlatform("Grailed");
         order.setRevenue(new BigDecimal("100"));
+        order.setLatitude(new BigDecimal("43.653200"));
+        order.setLongitude(new BigDecimal("-79.383200"));
         order.setItems(List.of(item));
         item.setOrder(order);
 
@@ -55,6 +57,8 @@ class OrderControllerWebTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].platform").value("Grailed"))
+                .andExpect(jsonPath("$[0].latitude").value(43.653200))
+                .andExpect(jsonPath("$[0].longitude").value(-79.383200))
                 .andExpect(jsonPath("$[0].items[0].productName").value("Penguin Shirt"));
     }
 

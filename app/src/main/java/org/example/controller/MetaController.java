@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import org.example.repository.StatsRepository;
+import org.example.service.PlatformService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,14 +22,16 @@ import java.util.List;
 public class MetaController {
 
     private final StatsRepository stats;
+    private final PlatformService platformService;
 
-    public MetaController(StatsRepository stats) {
+    public MetaController(StatsRepository stats, PlatformService platformService) {
         this.stats = stats;
+        this.platformService = platformService;
     }
 
     @GetMapping("/platforms")
     public List<String> platforms() {
-        return stats.getDistinctPlatforms();
+        return platformService.allPlatforms();
     }
 
     @GetMapping("/countries")

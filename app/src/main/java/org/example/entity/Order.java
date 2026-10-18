@@ -9,8 +9,9 @@ import java.util.List;
 /**
  * JPA entity mapped to the {@code orders} table.
  *
- * <p>Represents a customer order placed on a sales platform. All monetary values
- * are stored in CAD (converted at entry time via {@link org.example.service.CurrencyService}).
+ * <p>Represents a customer order placed on a sales platform. Shipping and revenue
+ * are stored in CAD (converted at entry time via {@link org.example.service.CurrencyService}),
+ * while {@code refunded} and {@code refundedUsed} are stored in CNY.
  * An order contains one or more {@link OrderItem}s via a one-to-many cascade relationship.</p>
  *
  * <p>Disputed orders are excluded from analytics views in the database.</p>
@@ -25,7 +26,7 @@ public class Order {
     @Column(name = "order_id")
     private Integer orderId;
 
-    /** Sales channel (e.g. "Instagram", "GRAILED", "In Person", "cashflow-tracker website"). */
+    /** Sales channel; canonical names include "Grailed", "In Person", "Website". */
     @Column(nullable = false, length = 30)
     private String platform;
 
@@ -37,11 +38,11 @@ public class Order {
     @Column(precision = 10, scale = 2)
     private BigDecimal revenue = BigDecimal.ZERO;
 
-    /** Amount refunded to customer in CAD. */
+    /** Amount refunded to customer in CNY (Chinese Yuan) — never CAD. */
     @Column(precision = 10, scale = 2)
     private BigDecimal refunded = BigDecimal.ZERO;
 
-    /** Portion of the refund that was reused/recouped in CAD. */
+    /** Portion of the refund that was reused/recouped, in CNY. */
     @Column(name = "refunded_used", precision = 10, scale = 2)
     private BigDecimal refundedUsed = BigDecimal.ZERO;
 
@@ -52,6 +53,14 @@ public class Order {
     /** Shipping destination (format: "City, State, COUNTRY"). Country is extracted for filtering. */
     @Column(name = "shipping_location", length = 200)
     private String shippingLocation = "TBD";
+
+    /** WGS-84 latitude of {@code shippingLocation}, geocoded on save; NULL when unknown. */
+    @Column(precision = 9, scale = 6)
+    private BigDecimal latitude;
+
+    /** WGS-84 longitude of {@code shippingLocation}, geocoded on save; NULL when unknown. */
+    @Column(precision = 9, scale = 6)
+    private BigDecimal longitude;
 
     /** Whether this order is under dispute. Disputed orders are excluded from stats views. */
     @Column(nullable = false)
@@ -108,6 +117,12 @@ public class Order {
 
     public String getShippingLocation() { return shippingLocation; }
     public void setShippingLocation(String shippingLocation) { this.shippingLocation = shippingLocation; }
+
+    public BigDecimal getLatitude() { return latitude; }
+    public void setLatitude(BigDecimal latitude) { this.latitude = latitude; }
+
+    public BigDecimal getLongitude() { return longitude; }
+    public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
 
     public Boolean getDisputed() { return disputed; }
     public void setDisputed(Boolean disputed) { this.disputed = disputed; }

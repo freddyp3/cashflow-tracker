@@ -1,6 +1,7 @@
 package org.example.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.example.dto.OrderItemRequest;
 import org.example.dto.OrderRequest;
@@ -23,18 +24,28 @@ import org.springframework.transaction.support.TransactionTemplate;
  * All mutating methods are {@code @Transactional} to ensure atomicity.
  * On update, existing items are cleared (triggering orphanRemoval) and
  * replaced with the new set from the request.</p>
+ *
+ * <p>Platform values are normalised to their canonical spelling
+ * ({@link PlatformService}) on every write, and a new or changed
+ * {@code shippingLocation} is geocoded to WGS-84 coordinates
+ * ({@link GeocodingService}); a geocoding failure never fails the save.</p>
  */
 @Service
 public class OrderService {
 
     private final OrderRepository orderRepo;
     private final ProductRepository productRepo;
+    private final GeocodingService geocodingService;
+    private final PlatformService platformService;
     private final TransactionTemplate txTemplate;
 
     public OrderService(OrderRepository orderRepo, ProductRepository productRepo,
+                        GeocodingService geocodingService, PlatformService platformService,
                         PlatformTransactionManager txManager) {
         this.orderRepo = orderRepo;
         this.productRepo = productRepo;
+        this.geocodingService = geocodingService;
+        this.platformService = platformService;
         this.txTemplate = new TransactionTemplate(txManager);
     }
 
@@ -94,6 +105,7 @@ public class OrderService {
      * ignored and the order's platform is always set from {@code platform}.</p>
      */
     public UpsertResult upsertByExternalRef(String platform, String externalRef, OrderRequest req) {
+        platform = platformService.normalise(platform);
         try {
             return attemptUpsert(platform, externalRef, req);
         } catch (DataIntegrityViolationException e) {
@@ -124,13 +136,15 @@ public class OrderService {
 
     /** Copies all scalar fields from the DTO onto the entity. */
     private void applyFields(Order order, OrderRequest req) {
-        order.setPlatform(req.getPlatform());
+        order.setPlatform(platformService.normalise(req.getPlatform()));
         order.setShipping(req.getShipping());
         order.setRevenue(req.getRevenue());
         order.setRefunded(req.getRefunded());
         order.setRefundedUsed(req.getRefundedUsed());
         order.setCustomerName(req.getCustomerName());
-        order.setShippingLocation(req.getShippingLocation());
+        String newLocation = req.getShippingLocation();
+        boolean locationChanged = !Objects.equals(order.getShippingLocation(), newLocation);
+        order.setShippingLocation(newLocation);
         order.setDisputed(req.getDisputed());
         order.setDraft(req.getDraft());
         if (Boolean.TRUE.equals(req.getDraft()) && (req.getPlatform() == null || req.getPlatform().isBlank())) {
@@ -139,6 +153,14 @@ public class OrderService {
         order.setOrderDate(req.getOrderDate());
         order.setDeliveredDate(req.getDeliveredDate());
         order.setNote(req.getNote());
+        if (req.getLatitude() != null && req.getLongitude() != null) {
+            order.setLatitude(req.getLatitude());
+            order.setLongitude(req.getLongitude());
+        } else if (locationChanged || order.getLatitude() == null) {
+            var coords = geocodingService.geocode(newLocation);
+            order.setLatitude(coords.map(GeocodingService.Coordinates::latitude).orElse(null));
+            order.setLongitude(coords.map(GeocodingService.Coordinates::longitude).orElse(null));
+        }
     }
 
     /** Resolves product references and adds OrderItem entities to the order. */
