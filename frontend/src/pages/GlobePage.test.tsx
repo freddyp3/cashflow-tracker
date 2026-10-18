@@ -1,130 +1,51 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import GlobePage from './GlobePage';
-import type { Order } from '../types';
+import type { GlobeSummary } from '../components/globe/aggregate';
 
-vi.mock('react-globe.gl', () => ({
-  default: vi.fn((props: Record<string, unknown>) => (
-    <div
-      data-testid="globe-canvas"
-      data-points-count={Array.isArray(props.pointsData) ? props.pointsData.length : 0}
-      data-arcs-count={Array.isArray(props.arcsData) ? props.arcsData.length : 0}
-      data-labels-count={Array.isArray(props.labelsData) ? props.labelsData.length : 0}
-    />
-  )),
-}));
-
-vi.mock('../api/orders', () => ({
-  getOrders: vi.fn(),
-}));
-
-// jsdom has no WebGL, so the real check would always hide the globe
-vi.mock('../components/globe/webglSupport', () => ({
-  default: vi.fn(() => true),
-}));
-
-import isWebGLAvailable from '../components/globe/webglSupport';
-
-import { getOrders } from '../api/orders';
-
-const mockFetch = vi.fn();
-globalThis.fetch = mockFetch;
-
-const fakeOrder = (shippingLocation: string, disputed = false): Order => ({
-  orderId: 1,
-  platform: 'Instagram',
-  shipping: 10,
-  revenue: 50,
-  refunded: 0,
-  refundedUsed: 0,
-  customerName: 'Test',
-  shippingLocation,
-  disputed,
-  orderDate: '2025-01-01',
-  deliveredDate: '2025-01-05',
-  note: null,
-  draft: false,
-  items: [],
-});
-
-const geoJsonResponse = {
-  ok: true,
-  json: () => Promise.resolve({ features: [{ type: 'Feature' }] }),
+const summary: GlobeSummary = {
+  countries: 2,
+  cities: 3,
+  orders: 4,
+  top: [
+    { location: 'Toronto, ON, CAN', country: 'CAN', lat: 43.65, lng: -79.38, orders: 2, revenue: 150 },
+    { location: 'Alliston, ON, CAN', country: 'CAN', lat: 44.15, lng: -79.87, orders: 1, revenue: 60 },
+    { location: 'New York, NY, USA', country: 'USA', lat: 40.71, lng: -74, orders: 1, revenue: 80 },
+  ],
 };
+
+let readyCallback: ((s: GlobeSummary) => void) | undefined;
+
+vi.mock('../components/globe/ShippingGlobe', () => ({
+  default: ({ onReady }: { onReady?: (s: GlobeSummary) => void }) => {
+    readyCallback = onReady;
+    return <div data-testid="shipping-globe" />;
+  },
+}));
 
 describe('GlobePage', () => {
   beforeEach(() => {
-    mockFetch.mockReset();
-    vi.mocked(getOrders).mockReset();
-    vi.mocked(isWebGLAvailable).mockReturnValue(true);
-  });
-
-  it('shows a fallback message when WebGL is unavailable', () => {
-    vi.mocked(isWebGLAvailable).mockReturnValue(false);
-    mockFetch.mockReturnValue(new Promise(() => {}));
-    vi.mocked(getOrders).mockReturnValue(new Promise(() => {}));
-    render(<GlobePage />);
-    expect(screen.getByText(/The globe couldn't be displayed/)).toBeInTheDocument();
-    expect(screen.queryByText('Loading globe data...')).not.toBeInTheDocument();
-    expect(mockFetch).not.toHaveBeenCalled();
-  });
-
-  it('shows loading state initially', () => {
-    mockFetch.mockReturnValue(new Promise(() => {}));
-    vi.mocked(getOrders).mockReturnValue(new Promise(() => {}));
-    render(<GlobePage />);
-    expect(screen.getByText('Loading globe data...')).toBeInTheDocument();
+    readyCallback = undefined;
   });
 
   it('renders the page heading', () => {
-    mockFetch.mockReturnValue(new Promise(() => {}));
-    vi.mocked(getOrders).mockReturnValue(new Promise(() => {}));
     render(<GlobePage />);
     expect(screen.getByRole('heading', { name: 'My Shipping Adventures' })).toBeInTheDocument();
   });
 
-  it('shows error when fetch fails', async () => {
-    mockFetch.mockRejectedValue(new Error('Network error'));
-    vi.mocked(getOrders).mockResolvedValue([]);
+  it('shows — placeholders until the globe is ready', () => {
     render(<GlobePage />);
-    await waitFor(() => {
-      expect(screen.getByText(/Error: Network error/)).toBeInTheDocument();
-    });
+    expect(screen.getAllByText('—')).not.toHaveLength(0);
+    expect(screen.getByText('Top destinations')).toBeInTheDocument();
   });
 
-  it('renders one dot per order, one arc per destination, one label per region', async () => {
-    mockFetch.mockResolvedValue(geoJsonResponse);
-    vi.mocked(getOrders).mockResolvedValue([
-      fakeOrder('Toronto, ON, CAN'),
-      fakeOrder('Toronto, ON, CAN'),          // duplicate location → extra dot, same arc/label
-      fakeOrder('Alliston, ON, CAN'),          // same label "ON" → extra dot+arc, no extra label
-      fakeOrder('New York, NY, USA'),
-      fakeOrder('TBD'),                        // excluded
-      fakeOrder('Toronto, ON, CAN', true),     // disputed → excluded
-    ]);
-
+  it('renders the summary and top destinations after onReady', () => {
     render(<GlobePage />);
-    await waitFor(() => {
-      const globe = screen.getByTestId('globe-canvas');
-      // 1 Vancouver + 4 order dots (2 Toronto + 1 Alliston + 1 NY)
-      expect(globe.dataset.pointsCount).toBe('5');
-      // 3 arcs (Toronto, Alliston, NY — one per unique location)
-      expect(globe.dataset.arcsCount).toBe('3');
-      // 2 labels (ON, NY — deduplicated by label text)
-      expect(globe.dataset.labelsCount).toBe('2');
-    });
-  });
+    act(() => readyCallback?.(summary));
 
-  it('includes Vancouver origin point even with no orders', async () => {
-    mockFetch.mockResolvedValue(geoJsonResponse);
-    vi.mocked(getOrders).mockResolvedValue([]);
-
-    render(<GlobePage />);
-    await waitFor(() => {
-      const globe = screen.getByTestId('globe-canvas');
-      // Just Vancouver origin
-      expect(globe.dataset.pointsCount).toBe('1');
-      expect(globe.dataset.arcsCount).toBe('0');
-      expect(globe.dataset.labelsCount).toBe('0');
-    });
+    expect(screen.getByText(/2 countries · 3 cities · 4 orders/)).toBeInTheDocument();
+    expect(screen.getByText('Toronto, ON, CAN')).toBeInTheDocument();
+    expect(screen.getByText('New York, NY, USA')).toBeInTheDocument();
+    expect(screen.getByText(/CA\$150\.00/)).toBeInTheDocument();
+    expect(screen.queryByText('—')).not.toBeInTheDocument();
   });
 });

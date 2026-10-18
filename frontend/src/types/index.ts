@@ -40,6 +40,10 @@ export interface Order {
   customerName: string;
   /** Format: "City, State, COUNTRY". Country is extracted for filtering. */
   shippingLocation: string;
+  /** WGS-84 latitude of the shipping destination, or null when ungeocoded. */
+  latitude: number | null;
+  /** WGS-84 longitude of the shipping destination, or null when ungeocoded. */
+  longitude: number | null;
   /** Disputed orders are excluded from analytics views. */
   disputed: boolean;
   /** Draft orders are incomplete and excluded from analytics views. */
@@ -60,6 +64,8 @@ export interface OrderRequest {
   refundedUsed: number;
   customerName: string;
   shippingLocation: string;
+  latitude?: number | null;
+  longitude?: number | null;
   disputed: boolean;
   draft: boolean;
   orderDate: string | null;
