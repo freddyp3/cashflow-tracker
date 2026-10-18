@@ -29,7 +29,10 @@ public abstract class AbstractPostgresIT {
                     "/docker-entrypoint-initdb.d/01-tables.sql")
             .withCopyFileToContainer(
                     MountableFile.forHostPath(Path.of("database", "create_views.sql")),
-                    "/docker-entrypoint-initdb.d/02-views.sql");
+                    "/docker-entrypoint-initdb.d/02-views.sql")
+            .withCopyFileToContainer(
+                    MountableFile.forHostPath(Path.of("database", "migrations", "002_external_ref.sql")),
+                    "/docker-entrypoint-initdb.d/03-migration-002.sql");
 
     static {
         postgres.start();

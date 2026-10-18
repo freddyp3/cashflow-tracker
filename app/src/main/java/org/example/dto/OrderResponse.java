@@ -26,6 +26,7 @@ public class OrderResponse {
     private LocalDate orderDate;
     private LocalDate deliveredDate;
     private String note;
+    private String externalRef;
     private List<OrderItemResponse> items;
 
     public static OrderResponse from(Order order) {
@@ -43,6 +44,7 @@ public class OrderResponse {
         r.orderDate = order.getOrderDate();
         r.deliveredDate = order.getDeliveredDate();
         r.note = order.getNote();
+        r.externalRef = order.getExternalRef();
         r.items = order.getItems().stream()
                 .map(OrderItemResponse::from)
                 .toList();
@@ -62,5 +64,6 @@ public class OrderResponse {
     public LocalDate getOrderDate() { return orderDate; }
     public LocalDate getDeliveredDate() { return deliveredDate; }
     public String getNote() { return note; }
+    public String getExternalRef() { return externalRef; }
     public List<OrderItemResponse> getItems() { return items; }
 }

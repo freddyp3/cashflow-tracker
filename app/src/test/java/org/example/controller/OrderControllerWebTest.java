@@ -13,8 +13,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,5 +56,38 @@ class OrderControllerWebTest {
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].platform").value("Grailed"))
                 .andExpect(jsonPath("$[0].items[0].productName").value("Penguin Shirt"));
+    }
+
+    private static Order orderWithRef() {
+        Order order = new Order();
+        order.setOrderId(1);
+        order.setPlatform("eBay");
+        order.setExternalRef("EB-1001");
+        return order;
+    }
+
+    @Test
+    void upsertCreatedReturns201() throws Exception {
+        when(service.upsertByExternalRef(eq("eBay"), eq("EB-1001"), any()))
+                .thenReturn(new OrderService.UpsertResult(orderWithRef(), true));
+
+        mvc.perform(put("/api/orders/external/eBay/EB-1001")
+                        .contentType("application/json")
+                        .content("{\"revenue\": 100}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.externalRef").value("EB-1001"))
+                .andExpect(jsonPath("$.platform").value("eBay"));
+    }
+
+    @Test
+    void upsertUpdatedReturns200() throws Exception {
+        when(service.upsertByExternalRef(eq("eBay"), eq("EB-1001"), any()))
+                .thenReturn(new OrderService.UpsertResult(orderWithRef(), false));
+
+        mvc.perform(put("/api/orders/external/eBay/EB-1001")
+                        .contentType("application/json")
+                        .content("{\"revenue\": 150}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.externalRef").value("EB-1001"));
     }
 }

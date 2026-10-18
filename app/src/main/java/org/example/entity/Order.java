@@ -72,6 +72,10 @@ public class Order {
     /** Optional free-text note about the order. */
     private String note;
 
+    /** Marketplace order number (e.g. the eBay order ID from a sale email). NULL for manual orders. */
+    @Column(name = "external_ref", length = 100)
+    private String externalRef;
+
     /**
      * Line items in this order. Cascade ALL ensures items are persisted/deleted with the order.
      * orphanRemoval ensures clearing the list deletes removed items from the database.
@@ -119,6 +123,9 @@ public class Order {
 
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
+
+    public String getExternalRef() { return externalRef; }
+    public void setExternalRef(String externalRef) { this.externalRef = externalRef; }
 
     public List<OrderItem> getItems() { return items; }
     public void setItems(List<OrderItem> items) { this.items = items; }

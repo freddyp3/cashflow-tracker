@@ -33,8 +33,13 @@ CREATE TABLE orders (
     draft BOOLEAN NOT NULL DEFAULT FALSE,       -- draft orders are incomplete and excluded from stats views
     order_date DATE,                           -- date order was placed
     delivered_date DATE,                       -- date order was delivered (for delivery time analysis)
-    note TEXT DEFAULT NULL                     -- optional free-text note
+    note TEXT DEFAULT NULL,                    -- optional free-text note
+    external_ref varchar(100)                  -- marketplace order number, NULL for manual orders
 );
+
+-- Uniqueness of the marketplace order number per platform; NULLs are distinct,
+-- so manual orders (no external_ref) are unaffected.
+CREATE UNIQUE INDEX orders_platform_external_ref_uq ON orders (platform, external_ref);
 
 -- Order items table: line items within an order, linking orders to products.
 -- Each item tracks what the customer paid and the size variant.

@@ -6,6 +6,7 @@ import org.example.dto.OrderRequest;
 import org.example.dto.OrderResponse;
 import org.example.service.OrderService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  *   <li>{@code GET    /api/orders/{id}}  - Get order by ID</li>
  *   <li>{@code POST   /api/orders}      - Create order with items (201)</li>
  *   <li>{@code PUT    /api/orders/{id}}  - Update order (replaces all items)</li>
+ *   <li>{@code PUT    /api/orders/external/{platform}/{ref}} - Create-or-update by marketplace order number (201 created / 200 updated)</li>
  *   <li>{@code DELETE /api/orders/{id}}  - Delete order and items (204)</li>
  * </ul></p>
  */
@@ -67,6 +69,17 @@ public class OrderController {
     @PutMapping("/{id}")
     public OrderResponse update(@PathVariable Integer id, @RequestBody OrderRequest request) {
         return OrderResponse.from(service.update(id, request));
+    }
+
+    @PutMapping("/external/{platform}/{ref}")
+    public ResponseEntity<OrderResponse> upsertByExternalRef(
+            @PathVariable String platform,
+            @PathVariable String ref,
+            @RequestBody OrderRequest request) {
+        OrderService.UpsertResult result = service.upsertByExternalRef(platform, ref, request);
+        return ResponseEntity
+                .status(result.created() ? HttpStatus.CREATED : HttpStatus.OK)
+                .body(OrderResponse.from(result.order()));
     }
 
     @DeleteMapping("/{id}")
