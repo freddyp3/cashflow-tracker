@@ -1,22 +1,30 @@
 /**
- * Form for creating or editing an order with its line items.
- * Supports multi-currency input (CAD, USD, EUR, GBP, CNY, AUD, CHF) with
- * live exchange rate conversion to CAD via the CurrencyService API.
- * Dynamically adds/removes OrderItemRow sub-forms for line items.
+ * Drawer form for creating or editing an order, organised into Sale /
+ * Customer & shipping / Status / Items sections. Location is captured as a
+ * country select + city + region and saved as "City, Region, CODE".
  */
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getProducts } from '../../api/products';
 import { getRate } from '../../api/currency';
 import type { Order, OrderRequest } from '../../types';
+import { COUNTRIES, countryByCode } from '../../data/countries';
+import { formatMoney } from '../ui';
 import OrderItemRow, { type ItemData } from './OrderItemRow';
+import { formatLocation, parseLocation } from './location';
 
 const CURRENCIES = ['CAD', 'USD', 'EUR', 'GBP', 'CNY', 'AUD', 'CHF'];
 
 interface Props {
   order?: Order | null;
+  platforms: string[];
   onSubmit: (data: OrderRequest) => void;
-  onCancel: () => void;
+  onDraftChange?: (draft: boolean) => void;
+}
+
+interface FieldErrors {
+  platform?: string;
+  revenue?: string;
 }
 
 const emptyItem = (): ItemData => ({
@@ -26,7 +34,13 @@ const emptyItem = (): ItemData => ({
   note: '',
 });
 
-export default function OrderForm({ order, onSubmit, onCancel }: Props) {
+const inputClass =
+  'w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500';
+const labelClass = 'block text-sm font-medium text-gray-700 mb-1';
+const errorClass = 'text-xs text-red-600 mt-1';
+
+export default function OrderForm({ order, platforms, onSubmit, onDraftChange }: Props) {
+  const initialLocation = parseLocation(order?.shippingLocation);
   const [currency, setCurrency] = useState('CAD');
   const [rate, setRate] = useState(1);
   const [cnyRate, setCnyRate] = useState(1);
@@ -36,12 +50,14 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
   const [refunded, setRefunded] = useState(order ? String(order.refunded) : '0');
   const [refundedUsed, setRefundedUsed] = useState(order ? String(order.refundedUsed) : '0');
   const [customerName, setCustomerName] = useState(order?.customerName ?? '');
-  const [shippingLocation, setShippingLocation] = useState(order?.shippingLocation ?? '');
+  const [country, setCountry] = useState(initialLocation.country);
+  const [city, setCity] = useState(initialLocation.city);
+  const [region, setRegion] = useState(initialLocation.region);
   const [disputed, setDisputed] = useState(order?.disputed ?? false);
   const [draft, setDraft] = useState(order?.draft ?? false);
   const [orderDate, setOrderDate] = useState(order?.orderDate || new Date().toISOString().slice(0, 10));
-
   const [note, setNote] = useState(order?.note ?? '');
+  const [errors, setErrors] = useState<FieldErrors>({});
   const [items, setItems] = useState<ItemData[]>(
     order
       ? order.items.map((i) => ({
@@ -85,16 +101,29 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
     return parseFloat((num * cnyRate).toFixed(2));
   }
 
+  function updateDraft(value: boolean) {
+    setDraft(value);
+    onDraftChange?.(value);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const next: FieldErrors = {};
+    if (!draft) {
+      if (!platform) next.platform = 'Platform is required';
+      if (revenue.trim() === '' || parseFloat(revenue) < 0) next.revenue = 'Revenue is required';
+    }
+    setErrors(next);
+    if (next.platform || next.revenue) return;
+
     onSubmit({
       platform,
-      shipping: convert(shipping),
+      shipping: shipping === '' ? -1 : convert(shipping),
       revenue: convert(revenue),
       refunded: convertCny(refunded),
       refundedUsed: convertCny(refundedUsed),
       customerName: customerName || 'TBD',
-      shippingLocation: shippingLocation || 'TBD',
+      shippingLocation: formatLocation({ city, region, country }),
       disputed,
       draft,
       orderDate: orderDate || null,
@@ -111,77 +140,121 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
     });
   }
 
-  const inputClass =
-    'w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500';
-
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
-          {order ? 'Edit Order' : 'New Order'}
-        </h3>
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-600">Currency:</label>
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className="rounded-md border border-gray-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-          >
-            {CURRENCIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-          {currency !== 'CAD' && (
-            <span className="text-xs text-gray-400">1 {currency} = {rate.toFixed(4)} CAD</span>
-          )}
+    <form id="order-form" noValidate onSubmit={handleSubmit} className="space-y-6">
+      <fieldset>
+        <legend className="text-sm font-semibold text-gray-900 mb-3">Sale</legend>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="of-platform" className={labelClass}>Platform</label>
+            <select
+              id="of-platform"
+              aria-label="Platform"
+              value={platform}
+              onChange={(e) => {
+                setPlatform(e.target.value);
+                setErrors((p) => ({ ...p, platform: undefined }));
+              }}
+              aria-invalid={Boolean(errors.platform)}
+              aria-describedby={errors.platform ? 'of-platform-error' : undefined}
+              className={`${inputClass} ${errors.platform ? 'border-red-500' : ''}`}
+            >
+              <option value="">Select platform…</option>
+              {platforms.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+              {platform && !platforms.includes(platform) && (
+                <option value={platform}>{platform}</option>
+              )}
+            </select>
+            {errors.platform && <p id="of-platform-error" className={errorClass}>{errors.platform}</p>}
+          </div>
+          <div>
+            <label htmlFor="of-order-date" className={labelClass}>Order date</label>
+            <input id="of-order-date" type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label htmlFor="of-currency" className={labelClass}>Currency</label>
+            <select id="of-currency" value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputClass}>
+              {CURRENCIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            {currency !== 'CAD' && (
+              <p className="text-xs text-gray-400 mt-1">1 {currency} = {rate.toFixed(4)} CAD</p>
+            )}
+          </div>
+          <div>
+            <label htmlFor="of-revenue" className={labelClass}>Revenue ({currency})</label>
+            <input
+              id="of-revenue"
+              type="number"
+              step="0.01"
+              value={revenue}
+              onChange={(e) => {
+                setRevenue(e.target.value);
+                setErrors((p) => ({ ...p, revenue: undefined }));
+              }}
+              aria-invalid={Boolean(errors.revenue)}
+              aria-describedby={errors.revenue ? 'of-revenue-error' : undefined}
+              className={`${inputClass} ${errors.revenue ? 'border-red-500' : ''}`}
+            />
+            {errors.revenue && <p id="of-revenue-error" className={errorClass}>{errors.revenue}</p>}
+            {currency !== 'CAD' && revenue && <p className="text-xs text-gray-400 mt-1">= {formatMoney(convert(revenue))} CAD</p>}
+          </div>
+          <div>
+            <label htmlFor="of-shipping" className={labelClass}>Shipping ({currency})</label>
+            <input id="of-shipping" type="number" step="0.01" value={shipping} onChange={(e) => setShipping(e.target.value)} className={inputClass} />
+            {currency !== 'CAD' && shipping && <p className="text-xs text-gray-400 mt-1">= {formatMoney(convert(shipping))} CAD</p>}
+          </div>
+          <div>
+            <label htmlFor="of-refunded" className={labelClass}>Refunded (CN¥)</label>
+            <input id="of-refunded" type="number" step="0.01" value={refunded} onChange={(e) => setRefunded(e.target.value)} className={inputClass} />
+            {refunded && refunded !== '0' && <p className="text-xs text-gray-400 mt-1">= {formatMoney(convertCny(refunded))} CAD</p>}
+          </div>
+          <div>
+            <label htmlFor="of-refunded-used" className={labelClass}>Refunded used (CN¥)</label>
+            <input id="of-refunded-used" type="number" step="0.01" value={refundedUsed} onChange={(e) => setRefundedUsed(e.target.value)} className={inputClass} />
+            {refundedUsed && refundedUsed !== '0' && <p className="text-xs text-gray-400 mt-1">= {formatMoney(convertCny(refundedUsed))} CAD</p>}
+          </div>
         </div>
-      </div>
+      </fieldset>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Platform</label>
-          <input type="text" value={platform} onChange={(e) => setPlatform(e.target.value)} required={!draft} className={inputClass} />
+      <fieldset>
+        <legend className="text-sm font-semibold text-gray-900 mb-3">Customer &amp; shipping</legend>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="of-customer" className={labelClass}>Customer name</label>
+            <input id="of-customer" type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label htmlFor="of-country" className={labelClass}>Country</label>
+            <select id="of-country" aria-label="Country" value={country} onChange={(e) => setCountry(e.target.value)} className={inputClass}>
+              <option value="">Select country…</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>{c.name}</option>
+              ))}
+              {country && !countryByCode(country) && (
+                <option value={country}>{country}</option>
+              )}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="of-city" className={labelClass}>City</label>
+            <input id="of-city" type="text" value={city} onChange={(e) => setCity(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label htmlFor="of-region" className={labelClass}>Region/State</label>
+            <input id="of-region" type="text" value={region} onChange={(e) => setRegion(e.target.value)} className={inputClass} />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Shipping ({currency})</label>
-          <input type="number" step="0.01" value={shipping} onChange={(e) => setShipping(e.target.value)} className={inputClass} />
-          {currency !== 'CAD' && shipping && <p className="text-xs text-gray-400 mt-1">= ${convert(shipping)} CAD</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Revenue ({currency})</label>
-          <input type="number" step="0.01" value={revenue} onChange={(e) => setRevenue(e.target.value)} className={inputClass} />
-          {currency !== 'CAD' && revenue && <p className="text-xs text-gray-400 mt-1">= ${convert(revenue)} CAD</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Refunded (CNY)</label>
-          <input type="number" step="0.01" value={refunded} onChange={(e) => setRefunded(e.target.value)} className={inputClass} />
-          {refunded && refunded !== '0' && <p className="text-xs text-gray-400 mt-1">= ${convertCny(refunded)} CAD</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Refunded Used (CNY)</label>
-          <input type="number" step="0.01" value={refundedUsed} onChange={(e) => setRefundedUsed(e.target.value)} className={inputClass} />
-          {refundedUsed && refundedUsed !== '0' && <p className="text-xs text-gray-400 mt-1">= ${convertCny(refundedUsed)} CAD</p>}
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
-          <input type="text" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Location</label>
-          <input type="text" value={shippingLocation} onChange={(e) => setShippingLocation(e.target.value)} placeholder="City, State, COUNTRY" className={inputClass} />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
-          <input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} className={inputClass} />
-        </div>
+      </fieldset>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Note</label>
-          <input type="text" value={note} onChange={(e) => setNote(e.target.value)} className={inputClass} />
-        </div>
-        <div className="flex items-end gap-4">
+      <fieldset>
+        <legend className="text-sm font-semibold text-gray-900 mb-3">Status</legend>
+        <div className="flex items-center gap-4 mb-4">
           <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" checked={draft} onChange={(e) => setDraft(e.target.checked)} className="rounded border-gray-300 text-amber-500 focus:ring-amber-500" />
+            <input type="checkbox" checked={draft} onChange={(e) => updateDraft(e.target.checked)} className="rounded border-gray-300 text-amber-500 focus:ring-amber-500" />
             Draft
           </label>
           <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -189,11 +262,15 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
             Disputed
           </label>
         </div>
-      </div>
+        <div>
+          <label htmlFor="of-note" className={labelClass}>Note</label>
+          <input id="of-note" type="text" value={note} onChange={(e) => setNote(e.target.value)} className={inputClass} />
+        </div>
+      </fieldset>
 
-      <div className="mb-4">
+      <fieldset>
+        <legend className="text-sm font-semibold text-gray-900 mb-3">Items</legend>
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-semibold text-gray-700">Order Items</h4>
           <button
             type="button"
             onClick={() => setItems([...items, emptyItem()])}
@@ -216,23 +293,7 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
             />
           ))}
         </div>
-      </div>
-
-      <div className="flex gap-3">
-        <button
-          type="submit"
-          className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-md hover:bg-amber-600 transition-colors"
-        >
-          {draft ? 'Save Draft' : order ? 'Update' : 'Create'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
+      </fieldset>
     </form>
   );
 }
