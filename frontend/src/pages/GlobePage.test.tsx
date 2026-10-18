@@ -1,5 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import GlobePage from './GlobePage';
+import { expectNoA11yViolations } from '../test/axe';
 import type { GlobeSummary } from '../components/globe/aggregate';
 
 const summary: GlobeSummary = {
@@ -47,5 +48,12 @@ describe('GlobePage', () => {
     expect(screen.getByText('New York, NY, USA')).toBeInTheDocument();
     expect(screen.getByText(/CA\$150\.00/)).toBeInTheDocument();
     expect(screen.queryByText('—')).not.toBeInTheDocument();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = render(<GlobePage />);
+    act(() => readyCallback?.(summary));
+    await screen.findByText('Toronto, ON, CAN');
+    await expectNoA11yViolations(container);
   });
 });

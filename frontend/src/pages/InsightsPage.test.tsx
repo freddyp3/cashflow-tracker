@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import InsightsPage from './InsightsPage';
+import { expectNoA11yViolations } from '../test/axe';
 
 vi.mock('../api/stats', () => ({
   getProductStats: vi.fn(async () => [
@@ -106,5 +107,11 @@ describe('InsightsPage', () => {
     renderPage();
     await userEvent.click(screen.getByRole('button', { name: 'Daily' }));
     await waitFor(() => expect(getProductDay).toHaveBeenCalled());
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderPage();
+    await screen.findByRole('cell', { name: 'Jacket' });
+    await expectNoA11yViolations(container);
   });
 });

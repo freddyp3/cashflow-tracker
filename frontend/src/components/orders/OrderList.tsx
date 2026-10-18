@@ -74,7 +74,7 @@ export default function OrderList({
                     )}
                   </button>
                 ) : (
-                  col.label
+                  col.label || <span className="sr-only">Items</span>
                 )}
               </th>
             ))}

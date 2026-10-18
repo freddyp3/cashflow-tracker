@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import OrdersPage from './OrdersPage';
+import { expectNoA11yViolations } from '../test/axe';
 import type { Order } from '../types';
 
 vi.mock('../api/orders', () => ({
@@ -53,7 +54,7 @@ const FIXTURE: Order[] = [
 
 function renderPage() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  render(
+  return render(
     <QueryClientProvider client={client}>
       <MemoryRouter>
         <OrdersPage />
@@ -124,5 +125,19 @@ describe('OrdersPage', () => {
     renderPage();
     expect(await screen.findByText('No orders yet')).toBeInTheDocument();
     expect(screen.getByText('Create your first order to get started.')).toBeInTheDocument();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderPage();
+    await screen.findByText('Jane Buyer');
+    await expectNoA11yViolations(container);
+  });
+
+  it('has no axe violations with the drawer open', async () => {
+    renderPage();
+    await screen.findByText('Jane Buyer');
+    await userEvent.click(screen.getByRole('button', { name: '+ New Order' }));
+    await screen.findByRole('dialog');
+    await expectNoA11yViolations(document.body);
   });
 });

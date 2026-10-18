@@ -1,92 +1,106 @@
 /**
- * Form for creating or editing a product.
- * Pre-fills fields when editing an existing product via the `product` prop.
+ * Form for creating or editing a product, rendered inside the page's Drawer.
+ * Pre-fills fields when editing via the `product` prop; validates inline on
+ * submit (the drawer's footer button targets this form via form="product-form").
  */
 import { useState } from 'react';
 import type { Product } from '../../types';
+import { formatMoney } from '../ui';
 
 interface Props {
   product?: Product | null;
+  cnyRate?: number;
   onSubmit: (data: Omit<Product, 'productId'>) => void;
-  onCancel: () => void;
 }
 
-export default function ProductForm({ product, onSubmit, onCancel }: Props) {
+const inputClass =
+  'w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500';
+const labelClass = 'block text-sm font-medium text-gray-700 mb-1';
+const errorClass = 'text-xs text-red-600 mt-1';
+
+export default function ProductForm({ product, cnyRate, onSubmit }: Props) {
   const [productName, setProductName] = useState(product?.productName ?? '');
   const [productType, setProductType] = useState(product?.productType ?? '');
   const [cost, setCost] = useState(product ? String(product.cost) : '');
   const [stockQuantity, setStockQuantity] = useState(product ? String(product.stockQuantity) : '0');
+  const [errors, setErrors] = useState<{ name?: string; cost?: string; stock?: string }>({});
+
+  const parsedCost = Number(cost);
+  const parsedStock = Number(stockQuantity);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const next: typeof errors = {};
+    if (!productName.trim()) next.name = 'Product name is required';
+    if (cost.trim() === '' || Number.isNaN(parsedCost)) next.cost = 'Cost is required';
+    else if (parsedCost < 0) next.cost = 'Cost must be 0 or more';
+    if (stockQuantity.trim() === '' || Number.isNaN(parsedStock) || !Number.isInteger(parsedStock) || parsedStock < 0)
+      next.stock = 'Stock must be 0 or more';
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
     onSubmit({
-      productName,
+      productName: productName.trim(),
       productType: productType || null,
-      cost: parseFloat(cost),
-      stockQuantity: parseInt(stockQuantity, 10),
+      cost: parsedCost,
+      stockQuantity: parsedStock,
     });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        {product ? 'Edit Product' : 'New Product'}
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-          <input
-            type="text"
-            value={productName}
-            onChange={(e) => setProductName(e.target.value)}
-            required
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Product Type</label>
-          <input
-            type="text"
-            value={productType}
-            onChange={(e) => setProductType(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Cost (CNY)</label>
-          <input
-            type="number"
-            step="0.01"
-            value={cost}
-            onChange={(e) => setCost(e.target.value)}
-            required
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-          <input
-            type="number"
-            value={stockQuantity}
-            onChange={(e) => setStockQuantity(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
-          />
-        </div>
+    <form id="product-form" noValidate onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label htmlFor="product-name" className={labelClass}>Product name</label>
+        <input
+          id="product-name"
+          type="text"
+          value={productName}
+          onChange={(e) => setProductName(e.target.value)}
+          aria-invalid={!!errors.name}
+          aria-describedby={errors.name ? 'product-name-error' : undefined}
+          className={inputClass}
+        />
+        {errors.name && <p id="product-name-error" className={errorClass}>{errors.name}</p>}
       </div>
-      <div className="flex gap-3 mt-6">
-        <button
-          type="submit"
-          className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-md hover:bg-amber-600 transition-colors"
-        >
-          {product ? 'Update' : 'Create'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
-        >
-          Cancel
-        </button>
+      <div>
+        <label htmlFor="product-type" className={labelClass}>Type</label>
+        <input
+          id="product-type"
+          type="text"
+          value={productType}
+          onChange={(e) => setProductType(e.target.value)}
+          className={inputClass}
+        />
+      </div>
+      <div>
+        <label htmlFor="product-cost" className={labelClass}>Cost (CN¥)</label>
+        <input
+          id="product-cost"
+          type="number"
+          step="0.01"
+          value={cost}
+          onChange={(e) => setCost(e.target.value)}
+          aria-invalid={!!errors.cost}
+          aria-describedby={errors.cost ? 'product-cost-error' : undefined}
+          className={inputClass}
+        />
+        {errors.cost
+          ? <p id="product-cost-error" className={errorClass}>{errors.cost}</p>
+          : cnyRate !== undefined && cost !== '' && !Number.isNaN(parsedCost) && (
+            <p className="text-xs text-gray-400 mt-1">≈ {formatMoney(parsedCost * cnyRate)}</p>
+          )}
+      </div>
+      <div>
+        <label htmlFor="product-stock" className={labelClass}>Stock</label>
+        <input
+          id="product-stock"
+          type="number"
+          value={stockQuantity}
+          onChange={(e) => setStockQuantity(e.target.value)}
+          aria-invalid={!!errors.stock}
+          aria-describedby={errors.stock ? 'product-stock-error' : undefined}
+          className={inputClass}
+        />
+        {errors.stock && <p id="product-stock-error" className={errorClass}>{errors.stock}</p>}
       </div>
     </form>
   );

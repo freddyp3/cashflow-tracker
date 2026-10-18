@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { expectNoA11yViolations } from '../test/axe';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import HomePage from './HomePage';
@@ -66,5 +67,12 @@ describe('HomePage', () => {
     expect(await screen.findByText('Jacket')).toBeInTheDocument();
     expect(await screen.findByText('Recent Orders')).toBeInTheDocument();
     expect(await screen.findByText('Buyer')).toBeInTheDocument();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderPage();
+    await screen.findByText('Buyer');
+    await screen.findByText('CA$400.00');
+    await expectNoA11yViolations(container);
   });
 });
