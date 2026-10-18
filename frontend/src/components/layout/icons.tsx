@@ -48,19 +48,10 @@ export function Orders(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function ProductStats(props: SVGProps<SVGSVGElement>) {
+export function Insights(props: SVGProps<SVGSVGElement>) {
   return (
     <Icon {...props}>
       <path d="M4 20V10M10 20V4M16 20v-8M22 20H2" />
-    </Icon>
-  );
-}
-
-export function PlatformStats(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Icon {...props}>
-      <path d="M21 12a9 9 0 1 1-9-9" />
-      <path d="M12 3v9h9" />
     </Icon>
   );
 }

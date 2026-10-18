@@ -1,10 +1,13 @@
 /**
  * Reusable line chart component for time-series stats data using Recharts.
- * Renders multiple configurable lines (e.g. revenue, profit, cost) over time.
- * X-axis formats dates as "Mon 'YY". Tooltip shows full month/year and dollar values.
- * Used by ProductStatsPage and PlatformStatsPage for monthly/daily trend charts.
+ * Renders the configured lines filtered by the `series` prop
+ * (revenue/profit/cost toggles live in the page). X-axis formats dates as
+ * "Mon 'YY" (monthly) or "Mon D" (daily). Tooltip shows CAD amounts.
  */
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { EmptyState, formatMoney } from '../ui';
+
+export type SeriesKey = 'revenue' | 'profit' | 'cost';
 
 interface LineConfig {
   dataKey: string;
@@ -16,19 +19,22 @@ interface Props {
   data: Record<string, unknown>[];
   xKey: string;
   lines: LineConfig[];
+  series?: SeriesKey[];
   title: string;
   granularity?: 'month' | 'day';
 }
 
-export default function TimeSeriesChart({ data, xKey, lines, title, granularity = 'month' }: Props) {
+export default function TimeSeriesChart({ data, xKey, lines, series, title, granularity = 'month' }: Props) {
   if (data.length === 0) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">{title}</h3>
-        <p className="text-gray-400 text-sm">No data available.</p>
+        <h3 className="text-sm font-semibold text-gray-700 mb-4">{title}</h3>
+        <EmptyState title="No data for these filters" />
       </div>
     );
   }
+
+  const visible = series ? lines.filter((l) => series.includes(l.name.toLowerCase() as SeriesKey)) : lines;
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
@@ -50,7 +56,7 @@ export default function TimeSeriesChart({ data, xKey, lines, title, granularity 
           <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
           <Tooltip
             contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
-            formatter={(value: number | undefined) => value != null ? [`$${value.toFixed(2)}`] : ['']}
+            formatter={(value: number | undefined) => value != null ? [formatMoney(value)] : ['']}
             labelFormatter={(label) => {
               const d = new Date(String(label));
               return granularity === 'day'
@@ -59,7 +65,7 @@ export default function TimeSeriesChart({ data, xKey, lines, title, granularity 
             }}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
-          {lines.map((line) => (
+          {visible.map((line) => (
             <Line
               key={line.dataKey}
               type="monotone"

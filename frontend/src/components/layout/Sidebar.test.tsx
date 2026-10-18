@@ -19,7 +19,7 @@ describe('Sidebar', () => {
 
   it('renders all original navigation links', () => {
     renderSidebar();
-    ['Home', 'Products', 'Orders', 'Product Stats', 'Platform Stats', 'Hauls'].forEach((label) => {
+    ['Home', 'Products', 'Orders', 'Insights', 'Hauls'].forEach((label) => {
       expect(screen.getByRole('link', { name: new RegExp(label, 'i') })).toBeInTheDocument();
     });
   });
