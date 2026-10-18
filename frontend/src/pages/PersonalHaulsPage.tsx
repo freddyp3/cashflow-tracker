@@ -45,12 +45,12 @@ export default function PersonalHaulsPage() {
   }
 
   // Running balance
-  let balance = 0;
   const sorted = [...hauls].sort((a, b) => new Date(a.entryTime).getTime() - new Date(b.entryTime).getTime());
-  const withBalance = sorted.map((h) => {
-    balance += h.flowType === 'income' ? h.amount : -h.amount;
-    return { ...h, balance };
-  });
+  const withBalance = sorted.reduce<Array<(typeof sorted)[number] & { balance: number }>>((acc, h) => {
+    const prev = acc.length ? acc[acc.length - 1].balance : 0;
+    acc.push({ ...h, balance: prev + (h.flowType === 'income' ? h.amount : -h.amount) });
+    return acc;
+  }, []);
 
   if (isLoading) {
     return <p className="text-gray-400">Loading hauls...</p>;

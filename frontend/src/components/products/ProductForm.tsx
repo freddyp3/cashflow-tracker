@@ -2,7 +2,7 @@
  * Form for creating or editing a product.
  * Pre-fills fields when editing an existing product via the `product` prop.
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Product } from '../../types';
 
 interface Props {
@@ -12,19 +12,10 @@ interface Props {
 }
 
 export default function ProductForm({ product, onSubmit, onCancel }: Props) {
-  const [productName, setProductName] = useState('');
-  const [productType, setProductType] = useState('');
-  const [cost, setCost] = useState('');
-  const [stockQuantity, setStockQuantity] = useState('0');
-
-  useEffect(() => {
-    if (product) {
-      setProductName(product.productName);
-      setProductType(product.productType || '');
-      setCost(String(product.cost));
-      setStockQuantity(String(product.stockQuantity));
-    }
-  }, [product]);
+  const [productName, setProductName] = useState(product?.productName ?? '');
+  const [productType, setProductType] = useState(product?.productType ?? '');
+  const [cost, setCost] = useState(product ? String(product.cost) : '');
+  const [stockQuantity, setStockQuantity] = useState(product ? String(product.stockQuantity) : '0');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

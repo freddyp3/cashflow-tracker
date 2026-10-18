@@ -107,6 +107,7 @@ export default function OrdersPage() {
       {showForm && (
         <div className="mb-6">
           <OrderForm
+            key={editing?.orderId ?? 'new'}
             order={editing}
             onSubmit={handleSubmit}
             onCancel={() => { setShowForm(false); setEditing(null); }}

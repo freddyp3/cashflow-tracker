@@ -84,6 +84,7 @@ export default function ProductsPage() {
       {showForm && (
         <div className="mb-6">
           <ProductForm
+            key={editing?.productId ?? 'new'}
             product={editing}
             onSubmit={handleSubmit}
             onCancel={() => { setShowForm(false); setEditing(null); }}

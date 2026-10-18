@@ -30,19 +30,28 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
   const [currency, setCurrency] = useState('CAD');
   const [rate, setRate] = useState(1);
   const [cnyRate, setCnyRate] = useState(1);
-  const [platform, setPlatform] = useState('');
-  const [shipping, setShipping] = useState('');
-  const [revenue, setRevenue] = useState('');
-  const [refunded, setRefunded] = useState('0');
-  const [refundedUsed, setRefundedUsed] = useState('0');
-  const [customerName, setCustomerName] = useState('');
-  const [shippingLocation, setShippingLocation] = useState('');
-  const [disputed, setDisputed] = useState(false);
-  const [draft, setDraft] = useState(false);
-  const [orderDate, setOrderDate] = useState(new Date().toISOString().slice(0, 10));
+  const [platform, setPlatform] = useState(order?.platform ?? '');
+  const [shipping, setShipping] = useState(order ? String(order.shipping) : '');
+  const [revenue, setRevenue] = useState(order ? String(order.revenue) : '');
+  const [refunded, setRefunded] = useState(order ? String(order.refunded) : '0');
+  const [refundedUsed, setRefundedUsed] = useState(order ? String(order.refundedUsed) : '0');
+  const [customerName, setCustomerName] = useState(order?.customerName ?? '');
+  const [shippingLocation, setShippingLocation] = useState(order?.shippingLocation ?? '');
+  const [disputed, setDisputed] = useState(order?.disputed ?? false);
+  const [draft, setDraft] = useState(order?.draft ?? false);
+  const [orderDate, setOrderDate] = useState(order?.orderDate || new Date().toISOString().slice(0, 10));
 
-  const [note, setNote] = useState('');
-  const [items, setItems] = useState<ItemData[]>([emptyItem()]);
+  const [note, setNote] = useState(order?.note ?? '');
+  const [items, setItems] = useState<ItemData[]>(
+    order
+      ? order.items.map((i) => ({
+          productId: i.productId,
+          itemPaid: String(i.itemPaid),
+          itemSize: i.itemSize || '',
+          note: i.note || '',
+        }))
+      : [emptyItem()]
+  );
 
   const { data: products = [] } = useQuery({
     queryKey: ['products'],
@@ -50,36 +59,7 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
   });
 
   useEffect(() => {
-    if (order) {
-      setPlatform(order.platform);
-      setShipping(String(order.shipping));
-      setRevenue(String(order.revenue));
-      setRefunded(String(order.refunded));
-      setRefundedUsed(String(order.refundedUsed));
-      setCustomerName(order.customerName);
-      setShippingLocation(order.shippingLocation);
-      setDisputed(order.disputed);
-      setDraft(order.draft);
-      setOrderDate(order.orderDate || new Date().toISOString().slice(0, 10));
-
-      setNote(order.note || '');
-      setItems(
-        order.items.map((i) => ({
-          productId: i.productId,
-          itemPaid: String(i.itemPaid),
-          itemSize: i.itemSize || '',
-          note: i.note || '',
-        }))
-      );
-    }
-  }, [order]);
-
-  useEffect(() => {
-    if (currency === 'CAD') {
-      setRate(1);
-      return;
-    }
-    getRate(currency).then(setRate);
+    if (currency !== 'CAD') getRate(currency).then(setRate);
   }, [currency]);
 
   useEffect(() => {
@@ -95,8 +75,9 @@ export default function OrderForm({ order, onSubmit, onCancel }: Props) {
   }
 
   function convert(val: string): number {
+    const effectiveRate = currency === 'CAD' ? 1 : rate;
     const num = parseFloat(val) || 0;
-    return parseFloat((num * rate).toFixed(2));
+    return parseFloat((num * effectiveRate).toFixed(2));
   }
 
   function convertCny(val: string): number {
