@@ -52,6 +52,8 @@ export interface Order {
   orderDate: string | null;
   deliveredDate: string | null;
   note: string | null;
+  /** Marketplace order ref set by the Gmail import worker; null/absent for manual orders. */
+  externalRef?: string | null;
   items: OrderItem[];
 }
 

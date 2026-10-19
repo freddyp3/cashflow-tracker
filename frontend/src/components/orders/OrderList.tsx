@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import type { Order } from '../../types';
 import { Badge, Button, Money } from '../ui';
+import { importMeta } from './importMeta';
 import type { SortDir, SortKey } from './useOrderTable';
 
 /**
@@ -83,6 +84,7 @@ export default function OrderList({
         <tbody>
           {orders.map((o) => {
             const expanded = expandedId === o.orderId;
+            const meta = importMeta(o);
             return (
               <Fragment key={o.orderId}>
                 <tr className={`border-b border-gray-100 hover:bg-gray-50 ${o.draft ? 'opacity-60' : ''}`}>
@@ -101,6 +103,11 @@ export default function OrderList({
                     {o.orderId}
                     {o.draft && <Badge tone="amber" className="ml-2">DRAFT</Badge>}
                     {o.disputed && <Badge tone="red" className="ml-2">DISPUTED</Badge>}
+                    {meta.imported && (
+                      <span title={`Imported from ${meta.ref}`}>
+                        <Badge tone="gray" className="ml-2">IMPORTED</Badge>
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900">{o.platform}</td>
                   <td className="px-4 py-3 text-gray-600">{o.customerName}</td>
@@ -125,6 +132,14 @@ export default function OrderList({
                   <tr className="border-b border-gray-100 bg-gray-50">
                     <td />
                     <td colSpan={10} className="px-4 py-3">
+                      {meta.warnings.length > 0 && (
+                        <div role="note" className="mb-2 rounded border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                          <p className="font-semibold">Needs review</p>
+                          <ul className="list-disc pl-4">
+                            {meta.warnings.map((w) => <li key={w}>{w}</li>)}
+                          </ul>
+                        </div>
+                      )}
                       {o.items.length === 0 ? (
                         <p className="text-sm text-gray-400">No items</p>
                       ) : (

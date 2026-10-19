@@ -130,4 +130,47 @@ describe('OrderList', () => {
     );
     expect(screen.getByText('No items')).toBeInTheDocument();
   });
+
+  it('shows IMPORTED badge with the marketplace ref as title on imported orders', () => {
+    renderList({ orders: [order({ orderId: 1, externalRef: 'gr-42' })] });
+    const badge = screen.getByText('IMPORTED');
+    expect(badge.parentElement).toHaveAttribute('title', 'Imported from gr-42');
+  });
+
+  it('does not show IMPORTED on non-imported orders', () => {
+    renderList({ orders: [order({ orderId: 1 })] });
+    expect(screen.queryByText('IMPORTED')).not.toBeInTheDocument();
+  });
+
+  it('shows the Needs review panel listing each warning on an expanded imported draft', () => {
+    renderList({
+      orders: [
+        order({
+          orderId: 1,
+          draft: true,
+          externalRef: 'gr-42',
+          note: "Auto-imported from Gmail (Grailed, msg abc). Order ref: gr-42. Review needed: no price found; no catalog product matched 'Foo'.",
+        }),
+      ],
+      expandedId: 1,
+    });
+    const note = screen.getByRole('note');
+    expect(note).toHaveTextContent('Needs review');
+    expect(screen.getByText('no price found')).toBeInTheDocument();
+    expect(screen.getByText("no catalog product matched 'Foo'")).toBeInTheDocument();
+  });
+
+  it('shows no Needs review panel on an expanded imported order without warnings', () => {
+    renderList({
+      orders: [
+        order({
+          orderId: 1,
+          externalRef: 'gr-42',
+          note: 'Auto-imported from Gmail (Grailed, msg abc). Order ref: gr-42.',
+        }),
+      ],
+      expandedId: 1,
+    });
+    expect(screen.queryByText('Needs review')).not.toBeInTheDocument();
+  });
 });
