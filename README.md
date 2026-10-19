@@ -43,6 +43,8 @@ So I created this.
   fetches each email, parses Grailed/Depop/eBay sale confirmations, and upserts
   exactly one order per marketplace order ID through the Spring API.
   Unparseable emails are nacked and dead-lettered.
+  Production setup (GCP resources, IAM, OAuth) is in `worker/README.md`;
+  `scripts/gcp-setup.sh` creates the Pub/Sub side.
 
 **What the numbers mean.** The speedup is a localhost, single-client,
 sequential measurement with no concurrent writes (`scripts/bench.sh`
@@ -65,7 +67,9 @@ docker compose up --build
 - API: http://localhost:8080/api/health
 - Worker: http://localhost:8090/health
 
-The worker runs without a Gmail token — see [worker/README.md](worker/README.md).
+The default compose stack runs the worker against the Pub/Sub emulator with no
+Gmail token; for the real Gmail + Pub/Sub configuration see
+[worker/README.md](worker/README.md).
 
 ### Native development
 

@@ -6,17 +6,81 @@ streaming-pulls them, fetches and parses each email (Grailed / Depop / eBay),
 and upserts exactly one order per marketplace order ID via the Spring API.
 Unparseable or repeatedly failing messages are nacked and dead-lettered.
 
-## Running
+## Architecture
 
-```bash
-docker compose up -d pubsub-emulator worker
-```
+Gmail `watch()` → Pub/Sub topic → pull subscription (worker, goroutine pool) →
+`PUT /api/orders/external/{platform}/{ref}`; failures → nack → dead-letter
+topic after N attempts.
 
-Health: `GET http://localhost:8090/health` →
-`{"status":"ok","gmail":"configured"|"missing","pubsub":"connected"}`.
+## Production setup
 
-Without a Gmail token the worker starts fine (`"gmail":"missing"`), logs a
-warning, and skips the watch renewer — everything else still works.
+1. Create the GCP resources (topic, DLQ topic, subscription with
+   `deadLetterPolicy`, IAM bindings, service account):
+
+   ```bash
+   PUBSUB_PROJECT_ID=my-project ./scripts/gcp-setup.sh
+   ```
+
+   The script is idempotent and grants the two service identities Pub/Sub
+   needs: `gmail-api-push@system.gserviceaccount.com` (publishes notifications)
+   gets `roles/pubsub.publisher` on the topic, and the project's Pub/Sub
+   service agent gets publisher on the DLQ topic plus subscriber on the
+   subscription (required for `deadLetterPolicy` to work).
+
+2. Create a key for the worker service account:
+
+   ```bash
+   gcloud iam service-accounts keys create worker/credentials/gcp-service-account.json \
+     --iam-account=cashflow-worker@my-project.iam.gserviceaccount.com --project=my-project
+   ```
+
+   `worker/credentials/` is git-ignored and mounted read-only at `/secrets`.
+
+3. Gmail OAuth: in the same project create an OAuth client (Desktop type),
+   configure the consent screen with scopes `gmail.readonly` and
+   `gmail.modify`, mint a refresh token, and save it as
+   `worker/credentials/gmail_token.json` — the `Credentials.to_json()` shape
+   with `client_id`, `client_secret`, `refresh_token`, `token_uri`.
+
+4. In `.env`, set `PUBSUB_PROJECT_ID=my-project` (see `.env.example`).
+
+5. Run the worker in production mode:
+
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build worker
+   ```
+
+   The override drops `PUBSUB_EMULATOR_HOST`, so the worker uses Application
+   Default Credentials (`GOOGLE_APPLICATION_CREDENTIALS`) against real
+   Pub/Sub. In production mode the worker does **not** create topics or
+   subscriptions — step 1 must have run.
+
+6. Verify:
+
+   ```bash
+   curl localhost:8090/health   # → "gmail":"configured","pubsub":"connected"
+   gcloud pubsub subscriptions describe gmail-notifications-worker \
+     --format='value(deadLetterPolicy)'
+   ```
+
+   Send yourself a test sale email and watch `docker compose logs -f worker`.
+
+## Operations
+
+- **Watch renewal** — the worker calls `watch()` on
+  `projects/<PUBSUB_PROJECT_ID>/topics/<PUBSUB_TOPIC>` every
+  `WATCH_RENEW_INTERVAL` (default 24h; Gmail expires watches after 7 days).
+  On the first `watch()` it writes the returned `historyId` to
+  `GMAIL_HISTORY_FILE` (`/state/history_id`) so the first notification has a
+  baseline.
+- **Dead letters** — on real Pub/Sub the subscription's native
+  `deadLetterPolicy` routes messages after `WORKER_MAX_ATTEMPTS`; the worker
+  only nacks. To inspect the DLQ, create a subscription on the dead-letter
+  topic and pull it: `gcloud pubsub subscriptions pull <dlq-sub> --auto-ack`.
+- **Re-driving** — delete `/state/history_id` (the `workerstate` volume) to
+  re-sync from the next watch's fresh baseline.
+- **Concurrency** — `WORKER_CONCURRENCY` sets the goroutine pool size / max
+  outstanding messages.
 
 ## Configuration
 
@@ -34,25 +98,26 @@ warning, and skips the watch renewer — everything else still works.
 | `GMAIL_HISTORY_FILE` | `/state/history_id` | Persisted historyId file |
 | `WATCH_RENEW_INTERVAL` | `24h` | Gmail watch renewal interval |
 | `HEALTH_ADDR` | `:8090` | Health server listen address |
+| `GOOGLE_APPLICATION_CREDENTIALS` | _(unset)_ | Service-account key for Pub/Sub; required when `PUBSUB_EMULATOR_HOST` is unset |
 | `PUBSUB_EMULATOR_HOST` | _(unset)_ | When set, connect to the emulator and auto-create topic/subscription/DLQ |
 
-## Gmail setup
+## Local development (emulator)
 
-Drop an OAuth token JSON — the `Credentials.to_json()` shape with `client_id`,
-`client_secret`, `refresh_token`, `token_uri` — at
-`worker/credentials/gmail_token.json` (git-ignored; mounted at `/secrets` in
-compose). On the first `watch()` the worker writes the returned `historyId` to
-`GMAIL_HISTORY_FILE` so the first notification has a baseline.
+```bash
+docker compose up -d pubsub-emulator worker
+```
 
-## Tests
+Health: `GET http://localhost:8090/health` →
+`{"status":"ok","gmail":"configured"|"missing","pubsub":"connected"}`.
+
+Without a Gmail token the worker starts fine (`"gmail":"missing"`), logs a
+warning, and skips the watch renewer — everything else still works.
+
+On the emulator the worker auto-creates the topic, subscription and DLQ, and
+simulates dead-lettering by counting attempts — after `WORKER_MAX_ATTEMPTS`
+nacks the message is republished to the DLQ topic with a `reason` attribute
+and then acked — because the emulator does not enforce `deadLetterPolicy`.
 
 ```bash
 docker compose run --rm worker-test   # go vet + go test (emulator tests need pubsub-emulator up)
 ```
-
-## Dead letters
-
-On real Pub/Sub, the subscription's native `deadLetterPolicy` routes messages
-after `WORKER_MAX_ATTEMPTS`. On the emulator the worker simulates it: after
-`MaxAttempts` nacks the message is republished to the DLQ topic with a `reason`
-attribute and then acked.
