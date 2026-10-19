@@ -51,10 +51,6 @@ public class OrderService {
         this.statsCache = statsCache;
     }
 
-    public List<Order> findAll() {
-        return orderRepo.findAll();
-    }
-
     // added by me
     public List<Order> findAll(String sort) {
         if ("orderDate".equals(sort)) {

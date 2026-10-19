@@ -1,7 +1,6 @@
 /** Top-5 products by units sold. */
 import { EmptyState, ErrorState, TableSkeleton, formatMoney } from '../ui';
-
-type Row = Record<string, unknown>;
+import type { Row } from '../../api/stats';
 
 interface Props {
   rows: Row[];

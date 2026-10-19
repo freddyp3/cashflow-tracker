@@ -1,4 +1,5 @@
 /** URL query-string state for the Insights page. */
+import type { Row } from '../../api/stats';
 
 export type Tab = 'products' | 'platforms';
 export type Granularity = 'month' | 'day';
@@ -41,8 +42,6 @@ export function serializeInsights(s: InsightsState): URLSearchParams {
   if (s.granularity !== DEFAULT_INSIGHTS.granularity) params.set('granularity', s.granularity);
   return params;
 }
-
-type Row = Record<string, unknown>;
 
 /**
  * Collapses per-entity time-series rows (one per product/platform per period)

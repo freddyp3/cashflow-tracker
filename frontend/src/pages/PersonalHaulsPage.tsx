@@ -8,13 +8,9 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPersonalHauls, createPersonalHaul, deletePersonalHaul } from '../api/personalHauls';
 import type { PersonalHaul } from '../types';
-import { Button, ConfirmDialog, Drawer, EmptyState, ErrorState, TableSkeleton, formatMoney } from '../components/ui';
+import { Button, ConfirmDialog, Drawer, EmptyState, ErrorState, TableSkeleton, formatMoney, inputClass, labelClass } from '../components/ui';
 import HaulsSummary from '../components/hauls/HaulsSummary';
 import { formatHaulDate, withRunningBalance } from '../components/hauls/haulMath';
-
-const inputClass =
-  'w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500';
-const labelClass = 'block text-sm font-medium text-gray-700 mb-1';
 
 export default function PersonalHaulsPage() {
   const queryClient = useQueryClient();

@@ -3,15 +3,14 @@
  * localeCompare, nulls last. `format: 'margin'` draws an in-cell bar, and the
  * top `highlightTop` rows by `highlightKey` get an amber highlight.
  */
-import { EmptyState, formatMoney } from '../ui';
+import { EmptyState, SortableHeader, formatMoney } from '../ui';
+import type { Row } from '../../api/stats';
 
 export interface StatsColumn {
   key: string;
   label: string;
-  format?: 'currency' | 'cny' | 'number' | 'percent' | 'margin';
+  format?: 'currency' | 'cny' | 'number' | 'margin';
 }
-
-type Row = Record<string, unknown>;
 
 interface Props {
   data: Row[];
@@ -23,7 +22,7 @@ interface Props {
   highlightTop?: number;
 }
 
-const NUMERIC_FORMATS = new Set(['currency', 'cny', 'number', 'percent', 'margin']);
+const NUMERIC_FORMATS = new Set(['currency', 'cny', 'number', 'margin']);
 
 function isRightAligned(format?: StatsColumn['format']): boolean {
   return format != null && NUMERIC_FORMATS.has(format);
@@ -34,7 +33,6 @@ function formatValue(value: unknown, format?: StatsColumn['format']): string {
   const num = Number(value);
   if (format === 'currency') return formatMoney(num);
   if (format === 'cny') return formatMoney(num, 'CNY');
-  if (format === 'percent') return `${(num * 100).toFixed(0)}%`;
   if (format === 'number') return num.toLocaleString();
   return String(value);
 }
@@ -93,22 +91,14 @@ export default function StatsTable({
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50">
             {columns.map((col) => (
-              <th
+              <SortableHeader
                 key={col.key}
-                aria-sort={col.key === sortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
-                className={`px-4 py-3 font-medium text-gray-500 ${isRightAligned(col.format) ? 'text-right' : 'text-left'}`}
-              >
-                <button
-                  type="button"
-                  onClick={() => onSort(col.key)}
-                  className="inline-flex items-center gap-1 font-medium text-gray-500 hover:text-gray-900"
-                >
-                  {col.label}
-                  {col.key === sortKey && (
-                    <span aria-hidden>{sortDir === 'asc' ? '▲' : '▼'}</span>
-                  )}
-                </button>
-              </th>
+                label={col.label}
+                active={col.key === sortKey}
+                dir={sortDir}
+                align={isRightAligned(col.format) ? 'right' : 'left'}
+                onClick={() => onSort(col.key)}
+              />
             ))}
           </tr>
         </thead>

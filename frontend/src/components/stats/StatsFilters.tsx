@@ -5,6 +5,7 @@
  */
 import type { Product } from '../../types';
 import type { Tab } from './insightsState';
+import { inlineInputClass } from '../ui';
 
 interface Props {
   country: string;
@@ -18,9 +19,6 @@ interface Props {
   countries: string[];
   products: Product[];
 }
-
-const selectClass =
-  'rounded-md border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500';
 
 export default function StatsFilters({
   country,
@@ -42,7 +40,7 @@ export default function StatsFilters({
           id="insights-country"
           value={country}
           onChange={(e) => onCountryChange(e.target.value)}
-          className={selectClass}
+          className={inlineInputClass}
         >
           <option value="">All countries</option>
           {countries.map((c) => (
@@ -57,7 +55,7 @@ export default function StatsFilters({
             id="insights-product"
             value={product ?? ''}
             onChange={(e) => onProductChange(e.target.value ? Number(e.target.value) : null)}
-            className={selectClass}
+            className={inlineInputClass}
           >
             <option value="">All products</option>
             {products.map((p) => (
@@ -72,7 +70,7 @@ export default function StatsFilters({
             id="insights-platform"
             value={platform}
             onChange={(e) => onPlatformChange(e.target.value)}
-            className={selectClass}
+            className={inlineInputClass}
           >
             <option value="">All platforms</option>
             {platforms.map((p) => (

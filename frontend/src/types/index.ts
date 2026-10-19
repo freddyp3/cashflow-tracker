@@ -73,12 +73,7 @@ export interface OrderRequest {
   orderDate: string | null;
   deliveredDate: string | null;
   note: string | null;
-  items: {
-    productId: number;
-    itemPaid: number;
-    itemSize: string | null;
-    note: string | null;
-  }[];
+  items: Omit<OrderItem, 'orderItemId' | 'productName'>[];
 }
 
 /** A personal haul cash flow entry (income or expense). */

@@ -1,6 +1,6 @@
 import { Fragment } from 'react';
 import type { Order } from '../../types';
-import { Badge, Button, Money } from '../ui';
+import { Badge, Button, Money, SortableHeader } from '../ui';
 import { importMeta } from './importMeta';
 import type { SortDir, SortKey } from './useOrderTable';
 
@@ -57,28 +57,22 @@ export default function OrderList({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50">
-            {COLUMNS.map((col, i) => (
-              <th
-                key={i}
-                aria-sort={col.key ? (col.key === sortKey ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none') : undefined}
-                className={`px-4 py-3 font-medium text-gray-500 ${alignClass[col.align]}`}
-              >
-                {col.key ? (
-                  <button
-                    type="button"
-                    onClick={() => onSort(col.key!)}
-                    className="inline-flex items-center gap-1 font-medium text-gray-500 hover:text-gray-900"
-                  >
-                    {col.label}
-                    {col.key === sortKey && (
-                      <span aria-hidden>{sortDir === 'asc' ? '▲' : '▼'}</span>
-                    )}
-                  </button>
-                ) : (
-                  col.label || <span className="sr-only">Items</span>
-                )}
-              </th>
-            ))}
+            {COLUMNS.map((col, i) =>
+              col.key ? (
+                <SortableHeader
+                  key={i}
+                  label={col.label}
+                  active={col.key === sortKey}
+                  dir={sortDir}
+                  align={col.align}
+                  onClick={() => onSort(col.key!)}
+                />
+              ) : (
+                <th key={i} className={`px-4 py-3 font-medium text-gray-500 ${alignClass[col.align]}`}>
+                  {col.label || <span className="sr-only">Items</span>}
+                </th>
+              ),
+            )}
           </tr>
         </thead>
         <tbody>

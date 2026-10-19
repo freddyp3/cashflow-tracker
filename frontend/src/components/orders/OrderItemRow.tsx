@@ -1,4 +1,5 @@
 import type { Product } from '../../types';
+import { inputClass, smallLabelClass } from '../ui';
 
 /**
  * A single line item row within the OrderForm.
@@ -30,12 +31,12 @@ export default function OrderItemRow({ item, index, products, rate, currency, on
   return (
     <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-md">
       <div className="flex-1">
-        <label htmlFor={`item-${index}-product`} className="block text-xs font-medium text-gray-500 mb-1">Product</label>
+        <label htmlFor={`item-${index}-product`} className={smallLabelClass}>Product</label>
         <select
           id={`item-${index}-product`}
           value={item.productId}
           onChange={(e) => onChange(index, 'productId', e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+          className={inputClass}
         >
           <option value={0}>Select product...</option>
           {products.map((p) => (
@@ -46,7 +47,7 @@ export default function OrderItemRow({ item, index, products, rate, currency, on
         </select>
       </div>
       <div className="w-32">
-        <label htmlFor={`item-${index}-paid`} className="block text-xs font-medium text-gray-500 mb-1">
+        <label htmlFor={`item-${index}-paid`} className={smallLabelClass}>
           Item Paid ({currency})
         </label>
         <input
@@ -55,30 +56,30 @@ export default function OrderItemRow({ item, index, products, rate, currency, on
           step="0.01"
           value={item.itemPaid}
           onChange={(e) => onChange(index, 'itemPaid', e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+          className={inputClass}
         />
         {converted && (
           <p className="text-xs text-gray-400 mt-1">= ${converted} CAD</p>
         )}
       </div>
       <div className="w-24">
-        <label htmlFor={`item-${index}-size`} className="block text-xs font-medium text-gray-500 mb-1">Size</label>
+        <label htmlFor={`item-${index}-size`} className={smallLabelClass}>Size</label>
         <input
           id={`item-${index}-size`}
           type="text"
           value={item.itemSize}
           onChange={(e) => onChange(index, 'itemSize', e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+          className={inputClass}
         />
       </div>
       <div className="w-32">
-        <label htmlFor={`item-${index}-note`} className="block text-xs font-medium text-gray-500 mb-1">Note</label>
+        <label htmlFor={`item-${index}-note`} className={smallLabelClass}>Note</label>
         <input
           id={`item-${index}-note`}
           type="text"
           value={item.note}
           onChange={(e) => onChange(index, 'note', e.target.value)}
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+          className={inputClass}
         />
       </div>
       <button

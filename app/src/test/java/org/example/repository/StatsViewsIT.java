@@ -183,6 +183,93 @@ class StatsViewsIT extends AbstractPostgresIT {
     }
 
     @Test
+    void getPlatformMonthFilteredByPlatformAndCountry() {
+        List<Map<String, Object>> rows = stats.getPlatformMonth("Grailed", "Canada");
+        assertEquals(1, rows.size());
+        assertEquals("Grailed", rows.get(0).get("platform"));
+        assertMoneyEquals("100", rows.get(0).get("month_revenue"));
+        assertEquals(1, ((Number) rows.get(0).get("month_units_sold")).intValue());
+    }
+
+    @Test
+    void getPlatformMonthByCountryOnly() {
+        List<Map<String, Object>> rows = stats.getPlatformMonth(null, "USA");
+        assertEquals(1, rows.size());
+        assertEquals("Depop", rows.get(0).get("platform"));
+        assertMoneyEquals("60", rows.get(0).get("month_revenue"));
+    }
+
+    @Test
+    void getPlatformMonthFilteredByPlatformFromView() {
+        List<Map<String, Object>> rows = stats.getPlatformMonth("Grailed", null);
+        assertEquals(1, rows.size());
+        assertMoneyEquals("100", rows.get(0).get("month_revenue"));
+    }
+
+    @Test
+    void getPlatformDayByCountry() {
+        List<Map<String, Object>> rows = stats.getPlatformDay("Depop", "USA");
+        assertEquals(1, rows.size());
+        assertMoneyEquals("60", rows.get(0).get("day_revenue"));
+        assertTrue(rows.get(0).containsKey("day_units_sold"));
+    }
+
+    @Test
+    void getProductMonthByProductAndCountry() {
+        List<Map<String, Object>> rows = stats.getProductMonth(1, "Canada");
+        assertEquals(1, rows.size());
+        assertEquals("Penguin Shirt", rows.get(0).get("product_name"));
+        assertMoneyEquals("100", rows.get(0).get("month_revenue"));
+    }
+
+    @Test
+    void getProductDayByCountry() {
+        List<Map<String, Object>> rows = stats.getProductDay(null, "USA");
+        assertEquals(1, rows.size());
+        assertEquals(2, ((Number) rows.get(0).get("product_id")).intValue());
+        assertMoneyEquals("60", rows.get(0).get("day_revenue"));
+    }
+
+    @Test
+    void getProductByPlatformMonthByCountry() {
+        List<Map<String, Object>> rows = stats.getProductByPlatformMonth("Canada");
+        assertEquals(1, rows.size());
+        assertEquals("Grailed", rows.get(0).get("platform"));
+        assertMoneyEquals("100", rows.get(0).get("month_revenue"));
+    }
+
+    @Test
+    void getProductByPlatformDayByCountry() {
+        List<Map<String, Object>> rows = stats.getProductByPlatformDay("USA");
+        assertEquals(1, rows.size());
+        assertEquals("Depop", rows.get(0).get("platform"));
+        assertMoneyEquals("60", rows.get(0).get("day_revenue"));
+    }
+
+    @Test
+    void getProductByPlatformStatsByPlatformAndCountry() {
+        List<Map<String, Object>> rows = stats.getProductByPlatformStats("Grailed", "Canada");
+        assertEquals(1, rows.size());
+        assertMoneyEquals("100", rows.get(0).get("product_total_revenue"));
+        assertEquals(1, ((Number) rows.get(0).get("units_sold")).intValue());
+    }
+
+    @Test
+    void getProductByPlatformStatsByPlatformFromView() {
+        List<Map<String, Object>> rows = stats.getProductByPlatformStats("Depop", null);
+        assertEquals(1, rows.size());
+        assertMoneyEquals("60", rows.get(0).get("product_total_revenue"));
+    }
+
+    @Test
+    void getProductStatsByCountryValues() {
+        List<Map<String, Object>> rows = stats.getProductStatsByCountry("USA");
+        assertEquals(1, rows.size());
+        assertEquals("Tiger Hoodie", rows.get(0).get("product_name"));
+        assertMoneyEquals("60", rows.get(0).get("product_total_revenue"));
+    }
+
+    @Test
     void allTwelveViewsExist() {
         List<String> views = jdbc.queryForList(
                 "SELECT viewname FROM pg_views WHERE schemaname = 'public'", String.class);

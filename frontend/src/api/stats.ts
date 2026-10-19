@@ -7,7 +7,7 @@
 import client from './client';
 
 /** Generic row type for stats view results (column names vary per view). */
-type Row = Record<string, unknown>;
+export type Row = Record<string, unknown>;
 
 export async function getProductStats(country?: string): Promise<Row[]> {
   const { data } = await client.get<Row[]>('/stats/products', { params: { country } });
@@ -16,11 +16,6 @@ export async function getProductStats(country?: string): Promise<Row[]> {
 
 export async function getPlatformStats(country?: string): Promise<Row[]> {
   const { data } = await client.get<Row[]>('/stats/platforms', { params: { country } });
-  return data;
-}
-
-export async function getProductByPlatformStats(platform?: string, country?: string): Promise<Row[]> {
-  const { data } = await client.get<Row[]>('/stats/products-by-platform', { params: { platform, country } });
   return data;
 }
 
@@ -49,12 +44,3 @@ export async function getProductDay(productId?: number, country?: string): Promi
   return data;
 }
 
-export async function getProductByPlatformMonth(country?: string): Promise<Row[]> {
-  const { data } = await client.get<Row[]>('/stats/product-by-platform-month', { params: { country } });
-  return data;
-}
-
-export async function getProductByPlatformDay(country?: string): Promise<Row[]> {
-  const { data } = await client.get<Row[]>('/stats/product-by-platform-day', { params: { country } });
-  return data;
-}

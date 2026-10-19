@@ -11,11 +11,6 @@ export async function getProducts(): Promise<Product[]> {
   return data;
 }
 
-export async function getProduct(id: number): Promise<Product> {
-  const { data } = await client.get<Product>(`/products/${id}`);
-  return data;
-}
-
 export async function createProduct(product: Omit<Product, 'productId'>): Promise<Product> {
   const { data } = await client.post<Product>('/products', product);
   return data;

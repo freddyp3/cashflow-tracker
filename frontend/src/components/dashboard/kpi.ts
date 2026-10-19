@@ -3,8 +3,7 @@
  * All-time totals come from the platform stats rows; this-month vs last-month
  * deltas come from the overall-month time series.
  */
-
-type Row = Record<string, unknown>;
+import type { Row } from '../../api/stats';
 
 export interface Kpis {
   revenue: number;

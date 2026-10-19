@@ -2,6 +2,7 @@
 import { Link } from 'react-router-dom';
 import type { Order } from '../../types';
 import { Badge, EmptyState, ErrorState, Money, Skeleton } from '../ui';
+import { applyTable, DEFAULT_STATE } from '../orders/useOrderTable';
 
 interface Props {
   orders: Order[];
@@ -11,15 +12,7 @@ interface Props {
 }
 
 export default function RecentOrders({ orders, loading, error, onRetry }: Props) {
-  const recent = [...orders]
-    .sort((a, b) => {
-      if (a.orderDate == null && b.orderDate == null) return b.orderId - a.orderId;
-      if (a.orderDate == null) return 1;
-      if (b.orderDate == null) return -1;
-      const cmp = b.orderDate.localeCompare(a.orderDate);
-      return cmp !== 0 ? cmp : b.orderId - a.orderId;
-    })
-    .slice(0, 5);
+  const recent = applyTable(orders, DEFAULT_STATE).slice(0, 5);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">

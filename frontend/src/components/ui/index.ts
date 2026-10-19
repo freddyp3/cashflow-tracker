@@ -15,3 +15,5 @@ export type { DrawerProps } from './Drawer';
 export { default as Money, formatMoney } from './Money';
 export type { Currency, MoneyProps } from './Money';
 export { default as RootErrorBoundary } from './RootErrorBoundary';
+export { inputClass, inlineInputClass, labelClass, smallLabelClass, errorClass } from './formClasses';
+export { default as SortableHeader } from './SortableHeader';

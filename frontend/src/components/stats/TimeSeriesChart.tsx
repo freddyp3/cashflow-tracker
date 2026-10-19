@@ -6,6 +6,7 @@
  */
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { EmptyState, formatMoney } from '../ui';
+import type { Row } from '../../api/stats';
 
 export type SeriesKey = 'revenue' | 'profit' | 'cost';
 
@@ -16,7 +17,7 @@ interface LineConfig {
 }
 
 interface Props {
-  data: Record<string, unknown>[];
+  data: Row[];
   xKey: string;
   lines: LineConfig[];
   series?: SeriesKey[];

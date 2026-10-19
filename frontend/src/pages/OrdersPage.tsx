@@ -7,10 +7,7 @@ import OrderForm from '../components/orders/OrderForm';
 import OrderList from '../components/orders/OrderList';
 import { useOrderTable } from '../components/orders/useOrderTable';
 import type { SortKey } from '../components/orders/useOrderTable';
-import { Button, ConfirmDialog, Drawer, EmptyState, ErrorState, TableSkeleton } from '../components/ui';
-
-const inputClass =
-  'rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500';
+import { Button, ConfirmDialog, Drawer, EmptyState, ErrorState, TableSkeleton, inlineInputClass } from '../components/ui';
 
 export default function OrdersPage() {
   const queryClient = useQueryClient();
@@ -99,13 +96,13 @@ export default function OrdersPage() {
           aria-label="Search orders"
           value={state.search}
           onChange={(e) => setState((s) => ({ ...s, search: e.target.value }))}
-          className={inputClass}
+          className={inlineInputClass}
         />
         <select
           aria-label="Platform"
           value={state.platform}
           onChange={(e) => setState((s) => ({ ...s, platform: e.target.value }))}
-          className={inputClass}
+          className={inlineInputClass}
         >
           <option value="">All platforms</option>
           {(platformsQuery.data ?? []).map((p) => (
@@ -116,7 +113,7 @@ export default function OrdersPage() {
           aria-label="Status"
           value={state.status}
           onChange={(e) => setState((s) => ({ ...s, status: e.target.value as typeof s.status }))}
-          className={inputClass}
+          className={inlineInputClass}
         >
           <option value="all">All</option>
           <option value="active">Active</option>
