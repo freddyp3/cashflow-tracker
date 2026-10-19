@@ -27,6 +27,7 @@ type Config struct {
 	WatchRenewInterval time.Duration
 	HealthAddr         string
 	PubSubEmulatorHost string
+	MailSourceDir      string
 }
 
 func env(key, def string) string {
@@ -76,5 +77,6 @@ func Load() (Config, error) {
 		WatchRenewInterval: interval,
 		HealthAddr:         env("HEALTH_ADDR", ":8090"),
 		PubSubEmulatorHost: os.Getenv("PUBSUB_EMULATOR_HOST"),
+		MailSourceDir:      env("MAIL_SOURCE_DIR", ""),
 	}, nil
 }

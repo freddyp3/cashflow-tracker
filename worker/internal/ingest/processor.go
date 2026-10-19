@@ -98,6 +98,7 @@ func (p *Processor) Handle(ctx context.Context, data []byte) error {
 		if err := p.Tracker.UpsertExternal(ctx, sale.Platform, ref, req); err != nil {
 			return err
 		}
+		log.Printf("ingest: upserted %s order %s (draft=%v) from message %s", sale.Platform, ref, req.Draft, msg.ID)
 	}
 
 	if n.HistoryID != "" {

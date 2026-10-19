@@ -101,13 +101,81 @@ var (
 	grailedSizeRe     = must(`(?i)\bsize\s*[:\-]?\s*([A-Za-z0-9./ ]{1,12})\b`)
 	grailedLocationRe = must(`(?i)(?:ships? to|shipping address|destination)\s*[:\-]?\s*([^\n]+)`)
 	grailedRefRe      = must(`(?i)order\s*(?:#|number|id)\s*[:\-]?\s*([A-Za-z0-9\-]+)`)
+
+	// Real Grailed template ("… just sold!" subject line, SHIPPING/PRICE
+	// DETAILS blocks) — tried before the generic patterns above.
+	grailedJustSoldRe    = must(`(?i)(.+?)\s+just sold!`)
+	grailedListingRe     = must(`(?i)listing\s*id\s*[:\-]?\s*(\d+)`)
+	grailedSizeLineRe    = must(`(?m)^\s*(?:US|EU|UK)\s+([A-Za-z0-9.]+(?:-[A-Za-z0-9.]+)?)\s*/`)
+	grailedShipBlockRe   = must(`(?is)SHIPPING DETAILS(.*?)PRICE DETAILS`)
+	grailedCityUSRe      = must(`^(.+?),\s*([A-Za-z]{2}),?\s*\d{5}(?:-\d{4})?$`)
+	grailedCityCanadaRe  = must(`^(.+?),\s*([A-Za-z]{2}),?\s*[A-Za-z]\d[A-Za-z]\s*\d[A-Za-z]\d$`)
+	grailedCountryCodeRe = must(`^[A-Za-z]{2,3}$`)
 )
+
+// alpha2ToAlpha3 maps the 2-letter country codes in marketplace addresses to
+// the alpha-3 codes used in shipping_location ("City, Region, COUNTRY").
+var alpha2ToAlpha3 = map[string]string{
+	"US": "USA", "CA": "CAN", "GB": "GBR", "AU": "AUS", "DE": "DEU",
+	"FR": "FRA", "JP": "JPN", "NL": "NLD", "IT": "ITA", "ES": "ESP",
+	"SE": "SWE", "KR": "KOR",
+}
+
+// grailedShippingBlock extracts buyer name and "City, Region, COUNTRY" from
+// the real template's SHIPPING DETAILS … PRICE DETAILS section. Returns nils
+// when the block or the city line is absent.
+func grailedShippingBlock(body string) (buyer *string, location *string) {
+	m := grailedShipBlockRe.FindStringSubmatch(body)
+	if m == nil {
+		return nil, nil
+	}
+	var lines []string
+	for _, l := range strings.Split(m[1], "\n") {
+		if l = strings.TrimSpace(l); l != "" {
+			lines = append(lines, l)
+		}
+	}
+	if len(lines) == 0 {
+		return nil, nil
+	}
+	buyer = &lines[0]
+	for i, l := range lines[1:] {
+		var cityLine []string
+		if c := grailedCityUSRe.FindStringSubmatch(l); c != nil {
+			cityLine = c
+		} else if c := grailedCityCanadaRe.FindStringSubmatch(l); c != nil {
+			cityLine = c
+		}
+		if cityLine == nil {
+			continue
+		}
+		country := ""
+		for _, next := range lines[i+2:] {
+			if grailedCountryCodeRe.MatchString(next) {
+				country = next
+				break
+			}
+		}
+		if country == "" {
+			continue
+		}
+		if a3, ok := alpha2ToAlpha3[strings.ToUpper(country)]; ok {
+			country = a3
+		}
+		loc := cityLine[1] + ", " + cityLine[2] + ", " + country
+		return buyer, &loc
+	}
+	return buyer, nil
+}
 
 // ParseGrailed parses a Grailed sale-confirmation email.
 func ParseGrailed(subject, body string) *ParsedSale {
 	sale := &ParsedSale{Platform: "Grailed", Currency: "USD"}
 
-	sale.ItemTitle = first(grailedTitleRe, subject+"\n"+body, 1)
+	sale.ItemTitle = first(grailedJustSoldRe, body, 1)
+	if sale.ItemTitle == nil {
+		sale.ItemTitle = first(grailedTitleRe, subject+"\n"+body, 1)
+	}
 	if sale.ItemTitle == nil {
 		sale.ItemTitle = first(grailedItemRe, body, 1)
 	}
@@ -122,10 +190,21 @@ func ParseGrailed(subject, body string) *ParsedSale {
 	}
 
 	sale.Shipping, _ = searchMoney(grailedShipRe, body)
-	sale.BuyerName = first(grailedBuyerRe, body, 1)
-	sale.Size = first(grailedSizeRe, body, 1)
-	sale.Location = first(grailedLocationRe, body, 1)
-	sale.OrderRef = first(grailedRefRe, body, 1)
+	sale.BuyerName, sale.Location = grailedShippingBlock(body)
+	if sale.BuyerName == nil {
+		sale.BuyerName = first(grailedBuyerRe, body, 1)
+	}
+	if sale.Location == nil {
+		sale.Location = first(grailedLocationRe, body, 1)
+	}
+	sale.Size = first(grailedSizeLineRe, body, 1)
+	if sale.Size == nil {
+		sale.Size = first(grailedSizeRe, body, 1)
+	}
+	sale.OrderRef = first(grailedListingRe, body, 1)
+	if sale.OrderRef == nil {
+		sale.OrderRef = first(grailedRefRe, body, 1)
+	}
 	return sale
 }
 

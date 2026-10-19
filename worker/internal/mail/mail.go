@@ -17,7 +17,8 @@ type Message struct {
 	Body    string
 }
 
-// MailSource lists the messages newer than a stored Gmail history ID.
+// MailSource lists the messages newer than a stored cursor — a Gmail
+// history ID for GmailSource, or the .eml file name for DirSource.
 type MailSource interface {
 	NewMessagesSince(ctx context.Context, lastHistoryID string) ([]Message, error)
 }

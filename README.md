@@ -67,6 +67,9 @@ docker compose up --build
 - API: http://localhost:8080/api/health
 - Worker: http://localhost:8090/health
 
+For a seeded demo stack with a simulated live Gmail sale, see
+[demo/README.md](demo/README.md).
+
 The default compose stack runs the worker against the Pub/Sub emulator with no
 Gmail token; for the real Gmail + Pub/Sub configuration see
 [worker/README.md](worker/README.md).

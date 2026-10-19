@@ -81,6 +81,11 @@ topic after N attempts.
   re-sync from the next watch's fresh baseline.
 - **Concurrency** — `WORKER_CONCURRENCY` sets the goroutine pool size / max
   outstanding messages.
+- **State volume** — `/state` is a named volume (`workerstate`) owned by the
+  worker user via the image. If a volume was created by an image older than
+  this fix it will be root-owned and every ingest fails with
+  `persist history id`; remove it once (`docker volume rm
+  <project>_workerstate`) and restart.
 
 ## Configuration
 
@@ -99,6 +104,7 @@ topic after N attempts.
 | `WATCH_RENEW_INTERVAL` | `24h` | Gmail watch renewal interval |
 | `HEALTH_ADDR` | `:8090` | Health server listen address |
 | `GOOGLE_APPLICATION_CREDENTIALS` | _(unset)_ | Service-account key for Pub/Sub; required when `PUBSUB_EMULATOR_HOST` is unset |
+| `MAIL_SOURCE_DIR` | _(unset)_ | Demo/local: read .eml files from this directory instead of Gmail (cursor = file name) |
 | `PUBSUB_EMULATOR_HOST` | _(unset)_ | When set, connect to the emulator and auto-create topic/subscription/DLQ |
 
 ## Local development (emulator)
@@ -117,6 +123,11 @@ On the emulator the worker auto-creates the topic, subscription and DLQ, and
 simulates dead-lettering by counting attempts — after `WORKER_MAX_ATTEMPTS`
 nacks the message is republished to the DLQ topic with a `reason` attribute
 and then acked — because the emulator does not enforce `deadLetterPolicy`.
+
+**Demo mode** — with `MAIL_SOURCE_DIR` set the worker reads `.eml` files from
+a directory instead of Gmail (the history-ID cursor is the file's base name,
+so timestamped names order correctly). The demo stack in
+[demo/README.md](../demo/README.md) uses this to simulate live sales.
 
 ```bash
 docker compose run --rm worker-test   # go vet + go test (emulator tests need pubsub-emulator up)

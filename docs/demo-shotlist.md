@@ -1,27 +1,26 @@
 # Demo shot list (screen recording, no narration)
 
-Prerequisites: `cp .env.example .env && docker compose up --build`; real data loaded via
-`DB_URL=jdbc:postgresql://localhost:5432/archivelol_db` for a native backend *or* the
-compose DB seeded; browser 1440 px wide; sidebar expanded; `prefers-reduced-motion` off.
+Prerequisites: `./scripts/demo-up.sh --fresh` (dummy data; nothing real on
+screen); browser 1440 px wide; sidebar expanded; `prefers-reduced-motion`
+off; a terminal window ready with `./scripts/demo-sale.sh` typed but not run.
 
 | # | Route / command | Action | Hold | What must be visible |
 |---|-----------------|--------|------|----------------------|
-| 1 | `/` | Land, wait for KPIs and globe to render | 4 s | 4 KPI cards with month-over-month deltas, revenue/profit chart, globe auto-rotating, best sellers, recent orders |
-| 2 | `/` | Hover a globe point | 3 s | Tooltip with location, order count, CA$ revenue |
-| 3 | `/visualization/globe` | Drag to stop rotation, hover a point, read the side panel | 5 s | "N countries · M cities · X orders", top destinations |
-| 4 | `/orders` | Type a customer name into search, pick a platform filter | 4 s | Table narrows live; status badges visible |
-| 5 | `/orders` | Click the Revenue header twice | 3 s | Sort indicator flips, rows reorder |
-| 6 | `/orders` | Expand a row with the IMPORTED badge | 4 s | Items table and (if a draft) the amber "Needs review" list |
-| 7 | `/orders` | New order → fill Sale / Customer & shipping / Status / Items in the drawer, save | 8 s | Inline validation on empty revenue, platform `<select>`, country select + city; row appears at top |
-| 8 | `/` | Return home | 3 s | The new order's location is a new point on the globe (geocoded on save) |
-| 9 | `/insights?tab=products` | Toggle Revenue/Profit/Cost series, switch month→day, sort by margin | 6 s | Top-3 margin rows highlighted, in-cell margin bars, URL query updates |
-| 10 | `/insights?tab=platforms` | Change the country filter | 3 s | Chart and table update together |
-| 11 | `/products` then `/personal-hauls` | Scroll | 4 s | CN¥ cost with CA$ equivalent, low-stock badge, hauls balance header |
-| 12 | Terminal | `docker compose ps`, `curl localhost:8090/health`, `tail docs/benchmark.md` | 6 s | Six services healthy, `"pubsub":"connected"`, the benchmark table ending in the overall speedup line |
+| 1 | `/` | Land, let KPIs/chart/globe render | 4 s | KPI cards with deltas, revenue/profit chart, rotating globe, best sellers, recent orders |
+| 2 | `/visualization/globe` | Drag to stop rotation, hover two points, read the side panel | 5 s | Tooltip (location, orders, CA$), "N countries · M cities · X orders", top destinations |
+| 3 | `/orders` | Land (default sort: date desc) | 3 s | Most recent order at the top with its date visible; IMPORTED badge on the seeded imported rows |
+| 4 | `/orders` | Expand the imported draft row | 3 s | Items table + amber "Needs review" list |
+| 5 | `/orders` | New order → fill Sale / Customer & shipping / Status / Items, save | 8 s | Inline validation on empty revenue, platform select, country select + city; row appears at the top with today's date |
+| 6 | `/insights?tab=products` | Toggle series, switch month→day, sort by margin | 6 s | Top-3 margin highlight, in-cell bars, URL updates |
+| 7 | `/insights?tab=platforms` | Change country filter | 3 s | Chart + table update together |
+| 8 | Terminal | `curl -s localhost:8090/health` then `docker compose -p cashflow-demo logs -f worker` in a split | 4 s | `"mail":"directory","pubsub":"connected"`, worker idle on the subscription |
+| 9 | Terminal | Run `./scripts/demo-sale.sh` | 4 s | "Published notification…" line; worker log shows `ingest: upserted Grailed order <listing> (draft=false)` |
+| 10 | `/orders` | Switch to the browser, reload | 4 s | New `Jordan Avery` / `Portland, OR, USA` order at the top, today's date, IMPORTED badge, `Polo Ralph Lauren Big Pony Rugby Polo` item, not a draft |
+| 11 | `/` | Home | 3 s | Recent orders shows the imported sale; Portland point on the globe. End |
 
 ## Cuts
 
-If the recording runs over 60 s, trim shots 2, 5, and 10 first.
+If the recording runs over 60 s, trim shot 7 first, then shot 4.
 
-The current `docs/cashflow-demo.mp4` predates this flow and should be replaced when
-re-recorded.
+The current `docs/cashflow-demo.mp4` predates this flow and should be replaced
+when re-recorded.

@@ -9,10 +9,12 @@ import (
 // Reporter reports which external dependencies are wired up.
 type Reporter struct {
 	GmailConfigured bool
+	// MailSource is "gmail", "directory" or "none".
+	MailSource string
 }
 
 // Handler returns an http.Handler answering GET /health with a JSON status
-// document: {"status":"ok","gmail":"configured"|"missing","pubsub":"connected"}.
+// document: {"status":"ok","gmail":"configured"|"missing","mail":"<MailSource>","pubsub":"connected"}.
 func (r Reporter) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
@@ -21,7 +23,7 @@ func (r Reporter) Handler() http.Handler {
 			gmail = "configured"
 		}
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"status":"ok","gmail":"%s","pubsub":"connected"}`, gmail)
+		fmt.Fprintf(w, `{"status":"ok","gmail":"%s","mail":"%s","pubsub":"connected"}`, gmail, r.MailSource)
 	})
 	return mux
 }

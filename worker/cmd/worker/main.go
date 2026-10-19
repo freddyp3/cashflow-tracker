@@ -60,6 +60,13 @@ func main() {
 	}
 
 	mailSrc, gmail := mailSource(ctx, cfg)
+	mailSourceName := "none"
+	switch {
+	case cfg.MailSourceDir != "":
+		mailSourceName = "directory"
+	case gmail != nil:
+		mailSourceName = "gmail"
+	}
 
 	tr := tracker.NewClient(cfg.TrackerAPIURL)
 	processor := ingest.NewProcessor(mailSrc, tr, dlq, cfg.GmailHistoryFile, cfg.MaxAttempts)
@@ -82,7 +89,7 @@ func main() {
 
 	healthSrv := &http.Server{
 		Addr:    cfg.HealthAddr,
-		Handler: health.Reporter{GmailConfigured: gmail != nil}.Handler(),
+		Handler: health.Reporter{GmailConfigured: gmail != nil, MailSource: mailSourceName}.Handler(),
 	}
 	go func() {
 		log.Printf("health endpoint on %s", cfg.HealthAddr)
@@ -143,6 +150,10 @@ func ensureSubscription(ctx context.Context, client *pubsub.Client, name string,
 // an Unavailable source plus nil (the caller reports "missing" and skips the
 // Gmail watch).
 func mailSource(ctx context.Context, cfg config.Config) (mail.MailSource, *mail.GmailSource) {
+	if cfg.MailSourceDir != "" {
+		log.Printf("mail source: directory %s (demo mode)", cfg.MailSourceDir)
+		return mail.DirSource{Dir: cfg.MailSourceDir}, nil
+	}
 	gmail, err := mail.NewGmailSource(ctx, cfg.GmailTokenFile, cfg.GmailUser)
 	if err != nil {
 		log.Printf("gmail token not usable (%v); running without gmail", err)

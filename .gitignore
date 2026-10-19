@@ -25,3 +25,4 @@ AGENTS.local.md
 .devin/config.local.json
 worker/credentials/
 worker/state/
+demo/inbox/*.eml

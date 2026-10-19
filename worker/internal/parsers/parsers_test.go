@@ -172,6 +172,53 @@ func TestNoPriceFixture(t *testing.T) {
 	})
 }
 
+// TestRealGrailedFixture parses the scrubbed copy of the real Grailed
+// template (SHIPPING/PRICE DETAILS blocks, "just sold!" title line).
+func TestRealGrailedFixture(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("testdata", "grailed_real.eml"))
+	if err != nil {
+		t.Fatalf("read fixture: %v", err)
+	}
+	msg, err := mail.DecodeEML("test-real", raw)
+	if err != nil {
+		t.Fatalf("decode fixture: %v", err)
+	}
+	sale := parsers.ForSender(msg.From)(msg.Subject, msg.Body)
+	checkSale(t, "grailed_real.eml", sale, expectedSale{
+		platform: "Grailed", title: "Polo Ralph Lauren Big Pony Rugby Polo Shirt Size M",
+		price: "120.00", currency: "USD", shipping: "0.00",
+		buyer: "Jordan Avery", size: "M", location: "Portland, OR, USA",
+		orderRef: "204817365",
+	})
+	if len(sale.Warnings) != 0 {
+		t.Errorf("grailed_real.eml: warnings = %v, want none", sale.Warnings)
+	}
+}
+
+// TestGrailedShippingLocation covers the alpha-2→alpha-3 country map and the
+// Canadian postal-code variant of the SHIPPING DETAILS city line.
+func TestGrailedShippingLocation(t *testing.T) {
+	cases := []struct {
+		cityLine string
+		country  string
+		want     string
+	}{
+		{"Portland, OR, 97214", "US", "Portland, OR, USA"},
+		{"Toronto, ON, M5V 2T6", "CA", "Toronto, ON, CAN"},
+		{"Berlin, BE, 10115", "DE", "Berlin, BE, DEU"},
+		{"Oslo, OS, 01500", "NO", "Oslo, OS, NO"},
+	}
+	for _, tc := range cases {
+		body := "SHIPPING DETAILS\nJordan Avery\n4821 Maple Grove Rd Apt 12\n" +
+			tc.cityLine + "\n" + tc.country + "\nPRICE DETAILS\nSold Price:\n$120.00"
+		sale := parsers.ParseGrailed("subj", body)
+		if !strEq(sale.Location, tc.want) {
+			t.Errorf("city %q country %q: location = %v, want %q",
+				tc.cityLine, tc.country, sale.Location, tc.want)
+		}
+	}
+}
+
 func TestForSender(t *testing.T) {
 	cases := []struct {
 		from     string

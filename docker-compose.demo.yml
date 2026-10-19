@@ -1,0 +1,12 @@
+# Demo override: seeded dummy data + directory mail source.
+#   docker compose -p cashflow-demo -f docker-compose.yml -f docker-compose.demo.yml up -d --build --wait
+# See demo/README.md.
+services:
+  postgres:
+    volumes:
+      - ./demo/seed.sql:/docker-entrypoint-initdb.d/05-demo-seed.sql:ro
+  worker:
+    environment:
+      MAIL_SOURCE_DIR: /inbox
+    volumes:
+      - ./demo/inbox:/inbox:ro
