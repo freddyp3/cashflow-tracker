@@ -19,9 +19,8 @@ node_modules
 # Sensitive data - contains real customer names/addresses, keep local only
 app/database/insert_data.sql
 
-# Local env / automation venv / agent-local config
+# Local env / agent-local config
 .env
-automation/.venv
 AGENTS.local.md
 .devin/config.local.json
 worker/credentials/

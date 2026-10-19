@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Full verification gate: frontend, backend, automation.
+# Full verification gate: frontend, backend, worker.
 # Exit 0 only if every layer passes. Prints a PASS/FAIL summary at the end.
 set -euo pipefail
 
@@ -8,7 +8,6 @@ ROOT="$(pwd)"
 
 FRONTEND_RESULT="SKIPPED"
 BACKEND_RESULT="SKIPPED"
-AUTOMATION_RESULT="SKIPPED"
 WORKER_RESULT="SKIPPED"
 
 run_layer() {
@@ -22,7 +21,6 @@ run_layer() {
     case "$name" in
         Frontend)   FRONTEND_RESULT="$result" ;;
         Backend)    BACKEND_RESULT="$result" ;;
-        Automation) AUTOMATION_RESULT="$result" ;;
         Worker)     WORKER_RESULT="$result" ;;
     esac
 }
@@ -34,9 +32,8 @@ print_summary() {
     echo "======================================================================"
     echo "  Frontend:   $FRONTEND_RESULT"
     echo "  Backend:    $BACKEND_RESULT"
-    echo "  Automation: $AUTOMATION_RESULT"
     echo "  Worker:     $WORKER_RESULT"
-    if [ "$FRONTEND_RESULT" != "PASS" ] || [ "$BACKEND_RESULT" != "PASS" ] || [ "$AUTOMATION_RESULT" != "PASS" ] || [ "$WORKER_RESULT" != "PASS" ]; then
+    if [ "$FRONTEND_RESULT" != "PASS" ] || [ "$BACKEND_RESULT" != "PASS" ] || [ "$WORKER_RESULT" != "PASS" ]; then
         exit 1
     fi
 }
@@ -62,14 +59,4 @@ set -e
 cd "'"$ROOT"'"
 docker compose up -d pubsub-emulator
 docker compose run --rm worker-test
-'
-
-run_layer Automation bash -c '
-set -e
-cd "'"$ROOT"'/automation"
-if [ ! -x .venv/bin/pytest ]; then
-    python3 -m venv .venv
-    .venv/bin/pip install -r requirements.txt pytest
-fi
-.venv/bin/pytest
 '

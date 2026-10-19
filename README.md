@@ -15,16 +15,17 @@ So I created this.
 ## How it's built
 
 ```
-┌──────────────┐     /api      ┌───────────────────┐          ┌────────────┐
+┌──────────────┐     /api      ┌───────────────────┐   JPA    ┌────────────┐
 │  React SPA   │ ────────────► │  Spring Boot API  │ ───────► │ PostgreSQL │
-│ (Vite + TS)  │               │     (Java 21)     │   JPA    │            │
-└──────────────┘               └───────────────────┘          └────────────┘
-                                        ▲
-                                        │ REST
-                               ┌────────┴────────┐
-                               │ Python FastAPI  │──► Gmail API
-                               │ automation svc  │
-                               └─────────────────┘
+│ (Vite + TS)  │               │     (Java 21)     │          └────────────┘
+└──────────────┘               │                   │ ───────► ┌────────────┐
+                               └───────────────────┘  cache   │   Redis    │
+                                         ▲                    └────────────┘
+                                         │ PUT /api/orders/external/{platform}/{ref}
+                               ┌─────────┴─────────┐   pull   ┌────────────┐  push  ┌───────────┐
+                               │  Go worker        │ ◄─────── │  Pub/Sub   │ ◄───── │ Gmail API │
+                               │ (goroutine pool)  │          └────────────┘ watch() └───────────┘
+                               └───────────────────┘
 ```
 
 - **Frontend** — React 19 + TypeScript, built with Vite and styled with
@@ -33,9 +34,14 @@ So I created this.
   Vitest + Testing Library.
 - **Backend** — Spring Boot 3 (Java 21) REST API with controller/service/
   repository layering, JPA entities, and DTOs at the API boundary. Data lives
-  in PostgreSQL, with SQL views powering the stats.
-- **Automation** — Python + FastAPI service running scheduled Gmail ingest:
-  per-platform email parsers turn sale confirmations into draft orders.
+  in PostgreSQL, with SQL views powering the stats. Stats responses are cached
+  in Redis and evicted on every order/product write (see `docs/benchmark.md`
+  for the measured speedup).
+- **Worker** — Go service: Gmail `watch()` pushes new-mail notifications to
+  Google Pub/Sub; a streaming-pull worker with a configurable goroutine pool
+  fetches each email, parses Grailed/Depop/eBay sale confirmations, and upserts
+  exactly one order per marketplace order ID through the Spring API.
+  Unparseable emails are nacked and dead-lettered.
 
 <details>
 <summary>If you have a use case for this, here's how to set it up locally:</summary>
@@ -56,6 +62,6 @@ cd frontend && npm install && npm run dev
 ```
 
 Datasource credentials are in `app/src/main/resources/application.properties`.
-The automation service is optional — see [automation/README.md](automation/README.md).
+The Gmail worker is optional — see [worker/README.md](worker/README.md).
 
 </details>
