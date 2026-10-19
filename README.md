@@ -46,6 +46,21 @@ So I created this.
 <details>
 <summary>If you have a use case for this, here's how to set it up locally:</summary>
 
+### Quick start (Docker)
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+- UI: http://localhost:3000
+- API: http://localhost:8080/api/health
+- Worker: http://localhost:8090/health
+
+The worker runs without a Gmail token — see [worker/README.md](worker/README.md).
+
+### Native development
+
 Requires Java 21, Node.js 20+, and PostgreSQL.
 
 ```bash
@@ -53,6 +68,8 @@ Requires Java 21, Node.js 20+, and PostgreSQL.
 createdb cashflow_tracker_db
 psql cashflow_tracker_db -f app/database/create_tables.sql
 psql cashflow_tracker_db -f app/database/create_views.sql
+psql cashflow_tracker_db -f app/database/migrations/002_external_ref.sql
+psql cashflow_tracker_db -f app/database/migrations/003_coordinates_platforms.sql
 
 # backend — http://localhost:8080
 ./gradlew :app:bootRun
@@ -62,6 +79,8 @@ cd frontend && npm install && npm run dev
 ```
 
 Datasource credentials are in `app/src/main/resources/application.properties`.
+To run against your own existing database set `DB_URL` (and `DB_USER`/`DB_PASSWORD`), e.g.
+`DB_URL=jdbc:postgresql://localhost:5432/archivelol_db ./gradlew :app:bootRun`.
 The Gmail worker is optional — see [worker/README.md](worker/README.md).
 
 </details>

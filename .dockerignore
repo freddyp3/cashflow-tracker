@@ -1,0 +1,13 @@
+frontend/
+worker/
+**/node_modules
+**/build
+**/dist
+.gradle
+.git
+specs/
+.devin/
+AGENTS.md
+docs/
+app/database/insert_data.sql
+.env

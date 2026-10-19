@@ -24,6 +24,37 @@ services:
     ports:
       - "6379:6379"
 
+  app:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/cashflow_tracker_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      REDIS_HOST: redis
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${UI_PORT:-3000}:80"
+    depends_on:
+      app:
+        condition: service_healthy
+
   pubsub-emulator:
     image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
     command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 --project=cashflow-local
@@ -35,7 +66,7 @@ services:
     environment:
       PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
       PUBSUB_PROJECT_ID: cashflow-local
-      TRACKER_API_URL: ${TRACKER_API_URL:-http://host.docker.internal:8080}
+      TRACKER_API_URL: ${TRACKER_API_URL:-http://app:8080}
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
     volumes:
       - ${GMAIL_CREDENTIALS_DIR:-./worker/credentials}:/secrets:ro
@@ -43,7 +74,10 @@ services:
     ports:
       - "8090:8090"
     depends_on:
-      - pubsub-emulator
+      pubsub-emulator:
+        condition: service_started
+      app:
+        condition: service_healthy
 
   worker-test:
     profiles: ["test"]
