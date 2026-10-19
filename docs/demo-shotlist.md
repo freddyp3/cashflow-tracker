@@ -2,7 +2,9 @@
 
 Prerequisites: `./scripts/demo-up.sh --fresh` (dummy data; nothing real on
 screen); browser 1440 px wide; sidebar expanded; `prefers-reduced-motion`
-off; a terminal window ready with `./scripts/demo-sale.sh` typed but not run.
+off; a terminal window ready with `./scripts/demo-sale.sh --gmail` typed but
+not run; Gmail web open on Inbox in a second browser tab; `.env` has the
+`DEMO_GMAIL_*` keys.
 
 | # | Route / command | Action | Hold | What must be visible |
 |---|-----------------|--------|------|----------------------|
@@ -13,10 +15,11 @@ off; a terminal window ready with `./scripts/demo-sale.sh` typed but not run.
 | 5 | `/orders` | New order → fill Sale / Customer & shipping / Status / Items, save | 8 s | Inline validation on empty revenue, platform select, country select + city; row appears at the top with today's date |
 | 6 | `/insights?tab=products` | Toggle series, switch month→day, sort by margin | 6 s | Top-3 margin highlight, in-cell bars, URL updates |
 | 7 | `/insights?tab=platforms` | Change country filter | 3 s | Chart + table update together |
-| 8 | Terminal | `curl -s localhost:8090/health` then `docker compose -p cashflow-demo logs -f worker` in a split | 4 s | `"mail":"directory","pubsub":"connected"`, worker idle on the subscription |
-| 9 | Terminal | Run `./scripts/demo-sale.sh` | 4 s | "Published notification…" line; worker log shows `ingest: upserted Grailed order <listing> (draft=false)` |
-| 10 | `/orders` | Switch to the browser, reload | 4 s | New `Jordan Avery` / `Portland, OR, USA` order at the top, today's date, IMPORTED badge, `Polo Ralph Lauren Big Pony Rugby Polo` item, not a draft |
-| 11 | `/` | Home | 3 s | Recent orders shows the imported sale; Portland point on the globe. End |
+| 8 | Terminal | `curl -s localhost:8090/health` | 2 s | `"mail":"directory","pubsub":"connected"` |
+| 9 | Terminal | Run `./scripts/demo-sale.sh --gmail` | 3 s | `Sent to … and published notification …` line |
+| 10 | Gmail tab | Wait for the new message (Gmail web refreshes itself within a few seconds; press `u`/refresh if needed), open it | 6 s | Subject `Your Item Has Sold! Polo Ralph Lauren...! Add tracking info`, Grailed-styled body with the Portland shipping block and `$120.00` sold price |
+| 11 | `/orders` | Switch tabs, reload | 4 s | New `Jordan Avery` / `Portland, OR, USA` order at the top, today's date, IMPORTED badge, `Polo Ralph Lauren Big Pony Rugby Polo` item, not a draft |
+| 12 | `/` | Home | 3 s | Recent orders shows it; Portland point on the globe. End |
 
 ## Cuts
 

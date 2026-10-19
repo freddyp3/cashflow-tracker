@@ -32,6 +32,25 @@ UI at http://localhost:3000/orders within seconds.
   order instead of creating a new one).
 - `demo-sale.sh --emulator/--project/--topic` — override emulator target.
 
+## Show the email arriving in Gmail
+
+`./scripts/demo-sale.sh --gmail` also delivers the generated `.eml` to a real
+inbox via Gmail SMTP, so on camera the email lands and seconds later the
+order appears in the tracker.
+
+1. On the Google Account, enable **2-Step Verification** (Security).
+2. Create an **App password** (Security → 2-Step Verification → App
+   passwords).
+3. Set the keys in `.env` (see `.env.example`): `DEMO_GMAIL_USER` (the Gmail
+   address), `DEMO_GMAIL_APP_PASSWORD` (the 16-char app password), and
+   optionally `DEMO_GMAIL_TO` (recipient; defaults to `DEMO_GMAIL_USER`).
+
+Then `./scripts/demo-sale.sh --gmail` sends first and publishes to the
+emulator only if the send succeeded. Gmail rewrites the sender of
+SMTP-submitted mail to your own address; the subject and the Grailed HTML
+body are preserved. The tracker is updated by the emulator path, not by
+reading Gmail.
+
 ## Teardown
 
 ```bash
