@@ -43,8 +43,8 @@ More screenshots are in `docs/ui/`.
                                └───────────────────┘  cache   │   Redis    │
                                          ▲                    └────────────┘
                                          │ PUT /api/orders/external/{platform}/{ref}
-                               ┌─────────┴─────────┐   pull   ┌────────────┐  push  ┌───────────┐
-                               │  Go worker        │ ◄─────── │  Pub/Sub   │ ◄───── │ Gmail API │
+                               ┌─────────┴─────────┐   pull   ┌────────────┐   push  ┌───────────┐
+                               │  Go worker        │ ◄─────── │  Pub/Sub   │ ◄────── │ Gmail API │
                                │ (goroutine pool)  │          └────────────┘ watch() └───────────┘
                                └───────────────────┘
 ```
