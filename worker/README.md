@@ -126,8 +126,8 @@ and then acked — because the emulator does not enforce `deadLetterPolicy`.
 
 **Demo mode** — with `MAIL_SOURCE_DIR` set the worker reads `.eml` files from
 a directory instead of Gmail (the history-ID cursor is the file's base name,
-so timestamped names order correctly). The demo stack in
-[demo/README.md](../demo/README.md) uses this to simulate live sales.
+so timestamped names order correctly). Useful for replaying saved sale
+emails locally.
 
 ```bash
 docker compose run --rm worker-test   # go vet + go test (emulator tests need pubsub-emulator up)
