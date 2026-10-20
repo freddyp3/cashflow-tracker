@@ -20,16 +20,13 @@ The home page is what I check most. Revenue, profit, margin and units for the
 month, how that compares to last month, and revenue against profit by month.
 
 When a sale comes in on Grailed, Depop or eBay the worker picks up the
-confirmation email and the order shows up on its own, tagged as imported. If
-something I buy in person sells, I add it by hand on the Orders page. Products
-hold what I paid for each item, so profit is worked out per unit sold instead
-of me doing it after the fact.
+confirmation email and the order shows up on its own. If I sell something in
+person, I add it by hand on the Orders page. Products hold what I paid for each
+item, so profit is worked out per unit sold instead of me doing it after the
+fact.
 
-Insights is where I go to see which products and platforms are actually
-making money, by month or by day, and I can narrow it to one platform, one
-product or one country. The globe plots where every order shipped to. Hauls is
-a separate ledger for my own clothes buying and flipping, so it doesn't mix
-with the business numbers.
+Then I have insights for if I want to see anything closer. I also have a cool
+globe visualization where every order shipped to is shown on a globe.
 
 More screenshots are in `docs/ui/`.
 
