@@ -7,14 +7,16 @@
 -- Shipping/revenue are stored in CAD (converted at entry time); refunds in CNY.
 -- ============================================================================
 
--- Products table: catalog of items available for resale.
+-- Products table: catalog of items available for resale, plus the user's own
+-- items sold one-off (kind='personal'). Personal products are excluded from stats views.
 -- Each product has a unique name, category type, supplier cost (CNY), and stock count.
 CREATE TABLE products (
     product_id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY NOT NULL,
     product_name varchar(50) NOT NULL UNIQUE,  -- unique display name (e.g. "National Geographic Penguin Shirt")
     product_type varchar(40),                  -- category grouping (e.g. "Shirts", "Accessories")
     cost NUMERIC(10, 2) NOT NULL,              -- supplier cost in CNY (Chinese Yuan)
-    stock_quantity INT DEFAULT 0               -- current inventory count
+    stock_quantity INT DEFAULT 0,              -- current inventory count
+    kind varchar(10) NOT NULL DEFAULT 'business' CONSTRAINT products_kind_chk CHECK (kind IN ('business', 'personal'))  -- 'business' = resale stock, 'personal' = one-off sale of my own items (excluded from stats views)
 );
 
 -- Orders table: customer orders placed across different sales platforms.
@@ -53,13 +55,4 @@ CREATE TABLE order_items (
     item_paid NUMERIC(10, 2) DEFAULT 0,        -- what customer paid for this specific item in CAD
     item_size varchar(200),                    -- size variant (e.g. "M", "L", "One Size")
     note TEXT DEFAULT NULL                     -- optional note about this line item
-);
-
--- Personal hauls table: tracks personal clothing purchases and resale cash flows.
--- Separate from business orders. Primary key is a DB-generated timestamp.
-CREATE TABLE personal_hauls (
-    entry_time TIMESTAMPTZ PRIMARY KEY DEFAULT now(), -- auto-generated timestamp (not settable from app)
-    flow_type varchar(10) NOT NULL,            -- "income" or "expense"
-    amount NUMERIC(10, 2) NOT NULL,            -- dollar amount in CAD
-    note TEXT DEFAULT NULL                     -- optional description
 );

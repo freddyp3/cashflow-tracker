@@ -4,7 +4,7 @@
  * submit (the drawer's footer button targets this form via form="product-form").
  */
 import { useState } from 'react';
-import type { Product } from '../../types';
+import type { Product, ProductKind } from '../../types';
 import { formatMoney, inputClass, labelClass, errorClass } from '../ui';
 
 interface Props {
@@ -18,6 +18,7 @@ export default function ProductForm({ product, cnyRate, onSubmit }: Props) {
   const [productType, setProductType] = useState(product?.productType ?? '');
   const [cost, setCost] = useState(product ? String(product.cost) : '');
   const [stockQuantity, setStockQuantity] = useState(product ? String(product.stockQuantity) : '0');
+  const [kind, setKind] = useState<ProductKind>(product?.kind ?? 'business');
   const [errors, setErrors] = useState<{ name?: string; cost?: string; stock?: string }>({});
 
   const parsedCost = Number(cost);
@@ -38,6 +39,7 @@ export default function ProductForm({ product, cnyRate, onSubmit }: Props) {
       productType: productType || null,
       cost: parsedCost,
       stockQuantity: parsedStock,
+      kind,
     });
   }
 
@@ -83,6 +85,18 @@ export default function ProductForm({ product, cnyRate, onSubmit }: Props) {
           : cnyRate !== undefined && cost !== '' && !Number.isNaN(parsedCost) && (
             <p className="text-xs text-gray-400 mt-1">≈ {formatMoney(parsedCost * cnyRate)}</p>
           )}
+      </div>
+      <div>
+        <label htmlFor="product-kind" className={labelClass}>Kind</label>
+        <select
+          id="product-kind"
+          value={kind}
+          onChange={(e) => setKind(e.target.value as ProductKind)}
+          className={inputClass}
+        >
+          <option value="business">Business</option>
+          <option value="personal">Personal</option>
+        </select>
       </div>
       <div>
         <label htmlFor="product-stock" className={labelClass}>Stock</label>

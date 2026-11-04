@@ -39,6 +39,7 @@ export default function ProductList({ products, cnyRate, onEdit, onDelete }: Pro
                 >
                   {p.productName}
                 </Link>
+                {p.kind === 'personal' && <Badge tone="gray" className="ml-2">Personal</Badge>}
               </td>
               <td className="px-4 py-3 text-gray-600">{p.productType || '—'}</td>
               <td className="px-4 py-3 text-right text-gray-900">

@@ -18,6 +18,7 @@ export default function ProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deleting, setDeleting] = useState<Product | null>(null);
+  const [showPersonal, setShowPersonal] = useState(false);
 
   const productsQuery = useQuery({
     queryKey: ['products'],
@@ -70,14 +71,25 @@ export default function ProductsPage() {
     }
   }
 
-  const products = productsQuery.data ?? [];
+  const allProducts = productsQuery.data ?? [];
+  const products = showPersonal ? allProducts : allProducts.filter((p) => p.kind !== 'personal');
   const saveMutation = editing ? updateMutation : createMutation;
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Products</h1>
-        <Button onClick={() => { setEditing(null); setDrawerOpen(true); }}>+ New Product</Button>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={showPersonal}
+              onChange={(e) => setShowPersonal(e.target.checked)}
+            />
+            Show personal
+          </label>
+          <Button onClick={() => { setEditing(null); setDrawerOpen(true); }}>+ New Product</Button>
+        </div>
       </div>
 
       {productsQuery.isLoading ? (

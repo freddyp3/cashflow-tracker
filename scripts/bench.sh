@@ -123,6 +123,14 @@ if [ "$has_lat" = "0" ]; then
     psql_exec -f - < app/database/migrations/002_external_ref.sql
     psql_exec -f - < app/database/migrations/003_coordinates_platforms.sql
 fi
+has_kind="$(psql_exec -Atc \
+    "SELECT count(*) FROM information_schema.columns
+      WHERE table_name = 'products' AND column_name = 'kind'")"
+if [ "$has_kind" = "0" ]; then
+    psql_exec -f - < app/database/migrations/004_drop_personal_hauls.sql
+    psql_exec -f - < app/database/migrations/005_product_kind.sql
+    psql_exec -f - < app/database/create_views.sql
+fi
 
 echo "==> loading seed data"
 psql_exec -f - < scripts/seed.sql >/dev/null

@@ -9,6 +9,7 @@ import GlobeErrorBoundary from './GlobeErrorBoundary';
 import isWebGLAvailable from './webglSupport';
 import useReducedMotion from './useReducedMotion';
 import { VANCOUVER, aggregateDestinations, pointRadius, summarize } from './aggregate';
+import { isPersonalOrder } from '../orders/isPersonalOrder';
 import type { GlobeSummary } from './aggregate';
 
 interface PointDatum {
@@ -72,7 +73,7 @@ export default function ShippingGlobe({ size, height = 600, onReady }: ShippingG
   });
 
   const dests = useMemo(
-    () => aggregateDestinations(ordersQuery.data ?? []),
+    () => aggregateDestinations((ordersQuery.data ?? []).filter((o) => !isPersonalOrder(o))),
     [ordersQuery.data],
   );
   const countries: CountryFeature[] = countriesQuery.data?.features ?? [];

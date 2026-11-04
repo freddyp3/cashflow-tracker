@@ -56,15 +56,6 @@ export function Insights(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function Hauls(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Icon {...props}>
-      <path d="M6 7h12l1 13H5L6 7Z" />
-      <path d="M9 7a3 3 0 0 1 6 0" />
-    </Icon>
-  );
-}
-
 export function Globe(props: SVGProps<SVGSVGElement>) {
   return (
     <Icon {...props}>

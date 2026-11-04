@@ -1,3 +1,6 @@
+/** 'business' = resale stock; 'personal' = one-off sale of the user's own items. */
+export type ProductKind = 'business' | 'personal';
+
 /** A product in the catalog. Costs are stored in CNY (Chinese Yuan). */
 export interface Product {
   productId: number;
@@ -9,6 +12,8 @@ export interface Product {
   cost: number;
   /** Current inventory count. */
   stockQuantity: number;
+  /** Personal products are hidden by default and excluded from stats. */
+  kind: ProductKind;
 }
 
 /** A line item within an order, linking to a product. */
@@ -17,6 +22,8 @@ export interface OrderItem {
   productId: number;
   /** Denormalized from the Product entity (included in API responses). */
   productName?: string;
+  /** Denormalized product kind (included in API responses). */
+  productKind?: ProductKind;
   /** What the customer paid for this item in CAD. */
   itemPaid: number;
   /** Size variant (e.g. "M", "L"). */
@@ -74,15 +81,4 @@ export interface OrderRequest {
   deliveredDate: string | null;
   note: string | null;
   items: Omit<OrderItem, 'orderItemId' | 'productName'>[];
-}
-
-/** A personal haul cash flow entry (income or expense). */
-export interface PersonalHaul {
-  /** ISO-8601 timestamp (database-generated primary key). */
-  entryTime: string;
-  /** "income" or "expense". */
-  flowType: string;
-  /** Dollar amount in CAD. */
-  amount: number;
-  note: string | null;
 }

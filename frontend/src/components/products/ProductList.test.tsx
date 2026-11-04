@@ -9,6 +9,7 @@ const product = (over: Partial<Product>): Product => ({
   productType: 'Shirts',
   cost: 100,
   stockQuantity: 5,
+  kind: 'business',
   ...over,
 });
 

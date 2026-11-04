@@ -9,7 +9,6 @@ import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import OrdersPage from './pages/OrdersPage';
 import InsightsPage from './pages/InsightsPage';
-import PersonalHaulsPage from './pages/PersonalHaulsPage';
 import GlobePage from './pages/GlobePage';
 
 export default function App() {
@@ -23,7 +22,6 @@ export default function App() {
           <Route path="/insights" element={<InsightsPage />} />
           <Route path="/stats/products" element={<Navigate to="/insights?tab=products" replace />} />
           <Route path="/stats/platforms" element={<Navigate to="/insights?tab=platforms" replace />} />
-          <Route path="/personal-hauls" element={<PersonalHaulsPage />} />
           <Route path="/visualization/globe" element={<GlobePage />} />
         </Route>
       </Routes>

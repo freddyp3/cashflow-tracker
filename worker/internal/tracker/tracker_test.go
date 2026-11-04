@@ -49,6 +49,7 @@ func TestMatchProduct(t *testing.T) {
 		json.NewEncoder(w).Encode([]Product{
 			{ProductID: 1, ProductName: "Penguin Shirt"},
 			{ProductID: 2, ProductName: "Denim Jacket"},
+			{ProductID: 3, ProductName: "Personal Hoodie", Kind: "personal"},
 		})
 	}))
 	defer srv.Close()
@@ -78,6 +79,14 @@ func TestMatchProduct(t *testing.T) {
 	}
 	if m != nil {
 		t.Fatalf("below cutoff should be nil, got %+v", m)
+	}
+
+	m, err = c.MatchProduct(ctx, "Personal Hoodie", 0.45)
+	if err != nil {
+		t.Fatalf("MatchProduct personal: %v", err)
+	}
+	if m != nil {
+		t.Fatalf("personal product must never match, got %+v", m)
 	}
 }
 

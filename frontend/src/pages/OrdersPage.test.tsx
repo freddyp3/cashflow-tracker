@@ -14,7 +14,7 @@ vi.mock('../api/orders', () => ({
 }));
 
 vi.mock('../api/products', () => ({
-  getProducts: vi.fn().mockResolvedValue([{ productId: 1, productName: 'Widget', productType: 'T', cost: 10, stockQuantity: 5 }]),
+  getProducts: vi.fn().mockResolvedValue([{ productId: 1, productName: 'Widget', productType: 'T', cost: 10, stockQuantity: 5, kind: 'business' }]),
 }));
 
 vi.mock('../api/currency', () => ({
@@ -50,6 +50,12 @@ const order = (over: Partial<Order>): Order => ({
 const FIXTURE: Order[] = [
   order({ orderId: 1, customerName: 'Jane Buyer', platform: 'Grailed' }),
   order({ orderId: 2, customerName: 'Ken Seller', platform: 'Depop' }),
+  order({
+    orderId: 3,
+    customerName: 'Pat Personal',
+    platform: 'eBay',
+    items: [{ orderItemId: 9, productId: 9, productName: 'My Old Hoodie', productKind: 'personal', itemPaid: 60, itemSize: null, note: null }],
+  }),
 ];
 
 function renderPage() {
@@ -82,6 +88,16 @@ describe('OrdersPage', () => {
     renderPage();
     expect(await screen.findByText('Jane Buyer')).toBeInTheDocument();
     expect(screen.getByText('Ken Seller')).toBeInTheDocument();
+  });
+
+  it('hides personal orders by default and shows them with a Personal badge after toggling', async () => {
+    renderPage();
+    await screen.findByText('Jane Buyer');
+    expect(screen.queryByText('Pat Personal')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText('Show personal'));
+    expect(await screen.findByText('Pat Personal')).toBeInTheDocument();
+    expect(screen.getByText('Personal')).toBeInTheDocument();
   });
 
   it('narrows rows by search', async () => {

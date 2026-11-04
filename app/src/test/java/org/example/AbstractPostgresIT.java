@@ -36,7 +36,13 @@ public abstract class AbstractPostgresIT {
                     "/docker-entrypoint-initdb.d/03-migration-002.sql")
             .withCopyFileToContainer(
                     MountableFile.forHostPath(Path.of("database", "migrations", "003_coordinates_platforms.sql")),
-                    "/docker-entrypoint-initdb.d/04-migration-003.sql");
+                    "/docker-entrypoint-initdb.d/04-migration-003.sql")
+            .withCopyFileToContainer(
+                    MountableFile.forHostPath(Path.of("database", "migrations", "004_drop_personal_hauls.sql")),
+                    "/docker-entrypoint-initdb.d/05-migration-004.sql")
+            .withCopyFileToContainer(
+                    MountableFile.forHostPath(Path.of("database", "migrations", "005_product_kind.sql")),
+                    "/docker-entrypoint-initdb.d/06-migration-005.sql");
 
     @ServiceConnection
     static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine").withExposedPorts(6379);

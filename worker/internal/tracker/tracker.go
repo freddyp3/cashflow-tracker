@@ -24,6 +24,7 @@ import (
 type Product struct {
 	ProductID   int    `json:"productId"`
 	ProductName string `json:"productName"`
+	Kind        string `json:"kind"`
 }
 
 // ProductMatch is the best fuzzy match for a listing title.
@@ -152,6 +153,15 @@ func (c *Client) Products(ctx context.Context) ([]Product, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&products); err != nil {
 		return nil, fmt.Errorf("products decode: %w", errs.ErrPermanent)
 	}
+	business := products[:0]
+	for _, p := range products {
+		// Empty kind means business (pre-kind servers); personal products are
+		// the owner's own items and must never be fuzzy-matched to a listing.
+		if p.Kind == "" || p.Kind == "business" {
+			business = append(business, p)
+		}
+	}
+	products = business
 	c.mu.Lock()
 	c.products = products
 	c.mu.Unlock()

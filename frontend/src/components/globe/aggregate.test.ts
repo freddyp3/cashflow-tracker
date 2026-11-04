@@ -1,4 +1,5 @@
 import { aggregateDestinations, pointRadius, summarize } from './aggregate';
+import { isPersonalOrder } from '../orders/isPersonalOrder';
 import type { Order } from '../../types';
 
 const order = (over: Partial<Order>): Order => ({
@@ -31,6 +32,22 @@ describe('aggregateDestinations', () => {
       order({ longitude: null }),
       order({}),
     ]);
+    expect(dests).toHaveLength(1);
+    expect(dests[0].location).toBe('Toronto, ON, CAN');
+  });
+
+  it('excludes personal orders from the ShippingGlobe input', () => {
+    const orders = [
+      order({ orderId: 1, shippingLocation: 'Toronto, ON, CAN' }),
+      order({
+        orderId: 2,
+        shippingLocation: 'New York, NY, USA',
+        latitude: 40.71,
+        longitude: -74.0,
+        items: [{ productId: 9, productName: 'My Old Hoodie', productKind: 'personal', itemPaid: 60, itemSize: null, note: null }],
+      }),
+    ];
+    const dests = aggregateDestinations(orders.filter((o) => !isPersonalOrder(o)));
     expect(dests).toHaveLength(1);
     expect(dests[0].location).toBe('Toronto, ON, CAN');
   });

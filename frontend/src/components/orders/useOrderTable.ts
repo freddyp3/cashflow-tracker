@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { Order } from '../../types';
+import { isPersonalOrder } from './isPersonalOrder';
 
 export type SortKey = 'orderDate' | 'platform' | 'customerName' | 'revenue' | 'shipping' | 'refunded';
 export type SortDir = 'asc' | 'desc';
@@ -12,6 +13,8 @@ export interface TableState {
   status: StatusFilter;
   sortKey: SortKey;
   sortDir: SortDir;
+  /** Personal orders (containing a kind='personal' product) are hidden unless true. */
+  showPersonal: boolean;
 }
 
 export const DEFAULT_STATE: TableState = {
@@ -20,6 +23,7 @@ export const DEFAULT_STATE: TableState = {
   status: 'all',
   sortKey: 'orderDate',
   sortDir: 'desc',
+  showPersonal: false,
 };
 
 /** Numeric/date columns sort desc first when a new column is picked; strings asc. */
@@ -73,6 +77,7 @@ export function applyTable(orders: Order[], s: TableState): Order[] {
   return orders
     .filter(
       (o) =>
+        (s.showPersonal || !isPersonalOrder(o)) &&
         matchesStatus(o, s.status) &&
         (!s.platform || o.platform === s.platform) &&
         (!q || matchesSearch(o, q)),

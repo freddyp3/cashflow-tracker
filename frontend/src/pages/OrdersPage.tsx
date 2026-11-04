@@ -83,7 +83,7 @@ export default function OrdersPage() {
   }
 
   const unfiltered =
-    state.search.trim() === '' && state.platform === '' && state.status === 'all';
+    state.search.trim() === '' && state.platform === '' && state.status === 'all' && !state.showPersonal;
 
   return (
     <div>
@@ -120,6 +120,14 @@ export default function OrdersPage() {
           <option value="draft">Draft</option>
           <option value="disputed">Disputed</option>
         </select>
+        <label className="flex items-center gap-2 text-sm text-gray-600">
+          <input
+            type="checkbox"
+            checked={state.showPersonal}
+            onChange={(e) => setState((s) => ({ ...s, showPersonal: e.target.checked }))}
+          />
+          Show personal
+        </label>
         <Button onClick={() => { setEditing(null); setDraftSubmit(false); setDrawerOpen(true); }}>
           + New Order
         </Button>

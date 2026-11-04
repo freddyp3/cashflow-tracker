@@ -36,6 +36,7 @@ class OrderControllerWebTest {
         product.setProductId(1);
         product.setProductName("Penguin Shirt");
         product.setCost(new BigDecimal("50"));
+        product.setKind("personal");
 
         OrderItem item = new OrderItem();
         item.setOrderItemId(1);
@@ -59,7 +60,8 @@ class OrderControllerWebTest {
                 .andExpect(jsonPath("$[0].platform").value("Grailed"))
                 .andExpect(jsonPath("$[0].latitude").value(43.653200))
                 .andExpect(jsonPath("$[0].longitude").value(-79.383200))
-                .andExpect(jsonPath("$[0].items[0].productName").value("Penguin Shirt"));
+                .andExpect(jsonPath("$[0].items[0].productName").value("Penguin Shirt"))
+                .andExpect(jsonPath("$[0].items[0].productKind").value("personal"));
     }
 
     private static Order orderWithRef() {

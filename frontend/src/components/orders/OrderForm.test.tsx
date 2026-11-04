@@ -5,7 +5,7 @@ import OrderForm from './OrderForm';
 import type { Order, OrderRequest } from '../../types';
 
 vi.mock('../../api/products', () => ({
-  getProducts: vi.fn().mockResolvedValue([{ productId: 1, productName: 'Widget', productType: 'T', cost: 10, stockQuantity: 5 }]),
+  getProducts: vi.fn().mockResolvedValue([{ productId: 1, productName: 'Widget', productType: 'T', cost: 10, stockQuantity: 5, kind: 'business' }]),
 }));
 
 vi.mock('../../api/currency', () => ({

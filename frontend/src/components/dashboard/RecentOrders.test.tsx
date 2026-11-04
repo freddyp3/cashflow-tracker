@@ -46,6 +46,26 @@ describe('RecentOrders', () => {
     expect(screen.queryByText('no-date-b')).not.toBeInTheDocument();
   });
 
+  it('excludes personal orders', () => {
+    render(
+      <MemoryRouter>
+        <RecentOrders
+          orders={[
+            order({ orderId: 1, customerName: 'Business Buyer', orderDate: '2026-10-01' }),
+            order({
+              orderId: 2,
+              customerName: 'Personal Seller',
+              orderDate: '2026-10-05',
+              items: [{ productId: 9, productName: 'My Old Hoodie', productKind: 'personal', itemPaid: 60, itemSize: null, note: null }],
+            }),
+          ]}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('Business Buyer')).toBeInTheDocument();
+    expect(screen.queryByText('Personal Seller')).not.toBeInTheDocument();
+  });
+
   it('lists item names with sizes joined by commas', () => {
     render(
       <MemoryRouter>

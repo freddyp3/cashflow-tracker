@@ -18,8 +18,9 @@ vi.mock('../api/currency', () => ({
 import { deleteProduct, getProducts } from '../api/products';
 
 const FIXTURE = [
-  { productId: 1, productName: 'Penguin Shirt', productType: 'Shirts', cost: 100, stockQuantity: 5 },
-  { productId: 2, productName: 'Patch', productType: 'Accessories', cost: 10, stockQuantity: 1 },
+  { productId: 1, productName: 'Penguin Shirt', productType: 'Shirts', cost: 100, stockQuantity: 5, kind: 'business' as const },
+  { productId: 2, productName: 'Patch', productType: 'Accessories', cost: 10, stockQuantity: 1, kind: 'business' as const },
+  { productId: 3, productName: 'My Old Hoodie', productType: 'Hoodies', cost: 0, stockQuantity: 0, kind: 'personal' as const },
 ];
 
 function renderPage() {
@@ -69,6 +70,16 @@ describe('ProductsPage', () => {
     vi.mocked(getProducts).mockResolvedValue([]);
     renderPage();
     expect(await screen.findByText('No products yet')).toBeInTheDocument();
+  });
+
+  it('hides personal products by default and shows them with a Personal badge after toggling', async () => {
+    renderPage();
+    await screen.findByText('Penguin Shirt');
+    expect(screen.queryByText('My Old Hoodie')).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText('Show personal'));
+    expect(await screen.findByText('My Old Hoodie')).toBeInTheDocument();
+    expect(screen.getByText('Personal')).toBeInTheDocument();
   });
 
   it('has no axe violations', async () => {

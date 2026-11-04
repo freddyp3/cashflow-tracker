@@ -19,7 +19,6 @@ const sections: NavSection[] = [
       { to: '/products', label: 'Products', Icon: icons.Products },
       { to: '/orders', label: 'Orders', Icon: icons.Orders },
       { to: '/insights', label: 'Insights', Icon: icons.Insights },
-      { to: '/personal-hauls', label: 'Hauls', Icon: icons.Hauls },
     ],
   },
   {

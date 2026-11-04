@@ -36,6 +36,14 @@ public class Product {
     @Column(name = "stock_quantity")
     private Integer stockQuantity = 0;
 
+    /**
+     * Product kind: {@code "business"} (resale stock, the default) or
+     * {@code "personal"} (one-off sale of the owner's own items). Personal
+     * products are excluded from the analytics views.
+     */
+    @Column(name = "kind", nullable = false, length = 10)
+    private String kind = "business";
+
     public Product() {}
 
     public Integer getProductId() { return productId; }
@@ -52,4 +60,7 @@ public class Product {
 
     public Integer getStockQuantity() { return stockQuantity; }
     public void setStockQuantity(Integer stockQuantity) { this.stockQuantity = stockQuantity; }
+
+    public String getKind() { return kind; }
+    public void setKind(String kind) { this.kind = kind; }
 }

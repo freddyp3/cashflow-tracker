@@ -5,6 +5,7 @@ import org.example.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Business logic for product CRUD operations.
@@ -15,6 +16,9 @@ import java.util.List;
  */
 @Service
 public class ProductService {
+
+    private static final Set<String> VALID_KINDS = Set.of("business", "personal");
+    private static final String DEFAULT_KIND = "business";
 
     private final ProductRepository repo;
     private final StatsCache statsCache;
@@ -34,6 +38,7 @@ public class ProductService {
     }
 
     public Product create(Product product) {
+        product.setKind(normalizeKind(product.getKind()));
         Product saved = repo.save(product);
         statsCache.evictAfterCommit();
         return saved;
@@ -45,6 +50,7 @@ public class ProductService {
         existing.setProductType(updated.getProductType());
         existing.setCost(updated.getCost());
         existing.setStockQuantity(updated.getStockQuantity());
+        existing.setKind(normalizeKind(updated.getKind()));
         Product saved = repo.save(existing);
         statsCache.evictAfterCommit();
         return saved;
@@ -53,5 +59,13 @@ public class ProductService {
     public void delete(Integer id) {
         repo.deleteById(id);
         statsCache.evictAfterCommit();
+    }
+
+    private static String normalizeKind(String kind) {
+        if (kind == null || kind.isBlank()) return DEFAULT_KIND;
+        if (!VALID_KINDS.contains(kind)) {
+            throw new IllegalArgumentException("Invalid product kind: " + kind);
+        }
+        return kind;
     }
 }

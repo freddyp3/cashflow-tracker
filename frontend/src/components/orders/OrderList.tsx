@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import type { Order } from '../../types';
 import { Badge, Button, Money, SortableHeader } from '../ui';
 import { importMeta } from './importMeta';
+import { isPersonalOrder } from './isPersonalOrder';
 import type { SortDir, SortKey } from './useOrderTable';
 
 /**
@@ -97,6 +98,7 @@ export default function OrderList({
                     {o.orderId}
                     {o.draft && <Badge tone="amber" className="ml-2">DRAFT</Badge>}
                     {o.disputed && <Badge tone="red" className="ml-2">DISPUTED</Badge>}
+                    {isPersonalOrder(o) && <Badge tone="gray" className="ml-2">Personal</Badge>}
                     {meta.imported && (
                       <span title={`Imported from ${meta.ref}`}>
                         <Badge tone="gray" className="ml-2">IMPORTED</Badge>

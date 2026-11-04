@@ -13,6 +13,7 @@ public class OrderItemResponse {
     private Integer orderItemId;
     private Integer productId;
     private String productName;
+    private String productKind;
     private BigDecimal itemPaid;
     private String itemSize;
     private String note;
@@ -22,6 +23,7 @@ public class OrderItemResponse {
         r.orderItemId = item.getOrderItemId();
         r.productId = item.getProduct().getProductId();
         r.productName = item.getProduct().getProductName();
+        r.productKind = item.getProduct().getKind();
         r.itemPaid = item.getItemPaid();
         r.itemSize = item.getItemSize();
         r.note = item.getNote();
@@ -31,6 +33,7 @@ public class OrderItemResponse {
     public Integer getOrderItemId() { return orderItemId; }
     public Integer getProductId() { return productId; }
     public String getProductName() { return productName; }
+    public String getProductKind() { return productKind; }
     public BigDecimal getItemPaid() { return itemPaid; }
     public String getItemSize() { return itemSize; }
     public String getNote() { return note; }
