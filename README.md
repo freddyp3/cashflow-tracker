@@ -32,19 +32,7 @@ More screenshots are in `docs/ui/`.
 
 ## How it's built
 
-```
-┌──────────────┐     /api      ┌───────────────────┐   JPA    ┌────────────┐
-│  React SPA   │ ────────────► │  Spring Boot API  │ ───────► │ PostgreSQL │
-│ (Vite + TS)  │               │     (Java 21)     │          └────────────┘
-└──────────────┘               │                   │ ───────► ┌────────────┐
-                               └───────────────────┘  cache   │   Redis    │
-                                         ▲                    └────────────┘
-                                         │ PUT /api/orders/external/{platform}/{ref}
-                               ┌─────────┴─────────┐   pull   ┌────────────┐   push  ┌───────────┐
-                               │  Go worker        │ ◄─────── │  Pub/Sub   │ ◄────── │ Gmail API │
-                               │ (goroutine pool)  │          └────────────┘ watch() └───────────┘
-                               └───────────────────┘
-```
+![Architecture: Gmail to Pub/Sub to the Go worker, into the Spring Boot API, PostgreSQL and Redis, out to the React app](docs/architecture.png)
 
 - **Frontend** — React 19 + TypeScript, built with Vite and styled with
   Tailwind CSS. TanStack Query for data fetching, Recharts for the stats
@@ -109,6 +97,8 @@ psql cashflow_tracker_db -f app/database/create_tables.sql
 psql cashflow_tracker_db -f app/database/create_views.sql
 psql cashflow_tracker_db -f app/database/migrations/002_external_ref.sql
 psql cashflow_tracker_db -f app/database/migrations/003_coordinates_platforms.sql
+psql cashflow_tracker_db -f app/database/migrations/004_drop_personal_hauls.sql
+psql cashflow_tracker_db -f app/database/migrations/005_product_kind.sql
 
 # backend — http://localhost:8080
 ./gradlew :app:bootRun
